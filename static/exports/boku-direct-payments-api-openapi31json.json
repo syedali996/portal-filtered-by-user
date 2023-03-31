@@ -1,0 +1,1976 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Boku Direct Payments API",
+    "description": "## API Security\n\nSecurity is a significant consideration for payment platforms. As part of the registration process for each registered merchant account, merchants receive a security key used to authenticate communications in either direction.\n\nDevelopers should consult the [Boku API Signature Authentication Guide](page:guides/api-signature-authentication-guide) for additional details with respect to implementing security on the Boku APIs.\n\n## API Usage\n\nWhen a consumer chooses to use a local payment-method (wallet), the consumer must go through an 'optin' flow to authenticate. This is accomplished using a redirect to the issuer's app or website where the consumer authenticates and completes the opt-in process.\n\nAfter the consumer adds their local payment-method (wallet), as their registered payment method, the 'charge' method is used to charge the consumer's local payment-method.\n\nIf a customer decides to refund a transaction, the 'refund-charge' method can be used to refund the transaction.\n\n## API Versioning\n\nThe Boku Payment Gateway API is versioned to provide support for changes to functionality without affecting existing integrations.  Each API URL includes version information that enables distinct functionality across different versions.\n\nThere are several types of changes that could result in a new API version:\n\n1. New API functionality – new APIs, new parameters, additional information in responses, improved error reporting.\n2. Deprecated API functionality – deprecated APIs, deprecated parameters, deprecated error messages.\n3. Changes in functionality – existing functional behavior changes such as the returned result of a call. A warning is changed to an error.  Validation becomes stricter or more lenient.\n\nIn these cases, Boku will release a new API version through a new endpoint(s). When new versions of existing APIs are added, support for existing versions is maintained.  Unless otherwise stated, as a rule, compatibility is maintained across versions.  Prior supported endpoints should have unchanged behavior. If an API is deprecated and scheduled to be removed, a notice of not less than 6 months will be given.  Requests for extensions to this period can be considered.\n\nBoku may make changes to the API within an existing version without changing the version number. An example of a non-versioning change would be the addition of an optional field to a request or to a response.\n\n## API Calls\n\n### URL Scheme\n\nAll the below API calls are against URLs that follow the pattern,\n\n``\nhttps://${api-node}.boku.com/${api-family}/${api-version}/${api-call}\n``\n\nDefinitions for the above placeholders:\n\n* **api-node**: This follows the pattern '${country}-api4' (e.g. 'us-api4').\n    * 'country' is the two letter country code of the end-user's payment-method against which the call is made.\n    * The country code is required and is used for more efficient routing of the request.\n    * The country code in the url must match the country code supplied in the `optin-request`.`country` element.\n* **api-family**: Groups a family of related API methods.\n    * In this API, family is either one of:\n        * 'optin' - For interacting with the user or handset to obtain billing approval.\n        * 'billing' - For actually performing billing operations against the user.\n* **api-version**: In this version of the API, this value is always the string '3.0'.\n    * Calls under different version numbers may be used in the future to introduce non-compatible API changes.\n* **api-call**: The name particular API call or method to invoke, for example 'charge' or 'refund-charge'.\n    * This usually matches the XML root element name, sans the '-request' suffix.\n\nFully qualified API call URLs are documented with each of the example calls detailed below.\n",
+    "contact": {
+      "name": "Boku, Inc.",
+      "url": "https://www.boku.com/",
+      "email": "info@boku.com"
+    },
+    "version": "3.0"
+  },
+  "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
+  "servers": [
+    {
+      "url": "https://{country}-api4-stage.boku.com",
+      "variables": {
+        "country": {
+          "default": "jp",
+          "description": "Country code in ISO 3166-1-alpha-2 standard"
+        }
+      }
+    },
+    {
+      "url": "https://{country}-api4.boku.com",
+      "variables": {
+        "country": {
+          "default": "jp",
+          "description": "Country code in ISO 3166-1-alpha-2 standard"
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/billing/3.0/charge": {
+      "post": {
+        "tags": [
+          "Charge",
+          "tag2"
+        ],
+        "summary": "charge",
+        "description": "The 'charge' request processes a payment against a previously authorized opt-in. The 'optin-id' received in the 'optin'/'confirm-optin' response must be supplied in order to validate the consumer payment method.\n\nIf the 'optin-id' and the other parameters of the request are valid, the charge is submitted to the issuer for processing. A 'charge-id' is returned in the API response.\n\n'Charge' may operate as a synchronous request, fully asynchronous, or synchronous with fallback to asynchronous after a timeout. The timeout is supplied with the request, or can default to a value configurable for the merchant. The 'charge' method returns a unique 'charge-id' in all cases where the request has been accepted for processing, including success, failure, and pending cases.\n\nThe 'charge' method is idempotent. If the same request is sent again (with the same 'merchant-request-id'), Boku will return the current status of the transaction. For example:\n\n* If the transaction has completed successfully, a response code of \"0\" will be returned.\n* If the transaction has completed with a billing error, a response code of \"107\" will be   returned",
+        "operationId": "charge",
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "$ref": "#/components/schemas/Content-Type"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/xml": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ChargeRequest"
+                  },
+                  {
+                    "xml": {
+                      "name": "charge-request",
+                      "attribute": false,
+                      "wrapped": false
+                    },
+                    "examples": [
+                      "<charge-request>\r\n  <currency>USD</currency>\r\n  <merchant-data>TY235g897qWs</merchant-data>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-item-description>Puzzle game</merchant-item-description>\r\n  <merchant-request-id>1002008</merchant-request-id>\r\n  <merchant-transaction-id>9002005</merchant-transaction-id>\r\n  <optin-id>IVXecDoa2f6Y3oOqp1f7</optin-id>\r\n  <total-amount>5</total-amount>\r\n  <timeout after=\"10000\" />\r\n  <consumer-ip-address>24.196.237.108</consumer-ip-address>\r\n</charge-request>",
+                      "<charge-request>\r\n  <currency>USD</currency>\r\n  <merchant-data>TY235g897qWs</merchant-data>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-item-description>Puzzle game</merchant-item-description>\r\n  <merchant-request-id>1002008</merchant-request-id>\r\n  <merchant-transaction-id>9002005</merchant-transaction-id>\r\n  <optin-id>IVXecDoa2f6Y3oOqp1f7</optin-id>\r\n  <total-amount>5</total-amount>\r\n  <timeout after=\"0\" />\r\n  <consumer-ip-address>24.196.237.108</consumer-ip-address>\r\n</charge-request>",
+                      "<charge-request>\r\n  <currency>USD</currency>\r\n  <merchant-data>TY235g897qWs</merchant-data>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-item-description>Puzzle game</merchant-item-description>\r\n  <merchant-request-id>1002008</merchant-request-id>\r\n  <merchant-transaction-id>9002005</merchant-transaction-id>\r\n  <optin-id>IVXecDoa2f6Y3oOqp1f7</optin-id>\r\n  <total-amount>5</total-amount>\r\n  <timeout after=\"10000\" />\r\n  <consumer-ip-address>24.196.237.108</consumer-ip-address>\r\n  <subscription is-subscription=\"true\">\r\n    <period count=\"1\">\r\n      <unit>month</unit>\r\n    </period>\r\n    <renewal>true</renewal>\r\n  </subscription>\r\n</charge-request>",
+                      "<charge-request>\r\n  <currency>USD</currency>\r\n  <merchant-data>TY235g897qWs</merchant-data>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-item-description>Puzzle game</merchant-item-description>\r\n  <merchant-request-id>1002008</merchant-request-id>\r\n  <merchant-transaction-id>9002005</merchant-transaction-id>\r\n  <optin-id>IVXecDoa2f6Y3oOqp1f7</optin-id>\r\n  <total-amount>5</total-amount>\r\n  <seller-of-record>\r\n    <id>73tdolramou0m6jnqyb6pkk3</id>\r\n  </seller-of-record>\r\n  <timeout after=\"10000\" />\r\n  <consumer-ip-address>24.196.237.108</consumer-ip-address>\r\n</charge-request>"
+                    ]
+                  }
+                ],
+                "contentMediaType": "application/xml"
+              },
+              "examples": {
+                "Example sync purchase 'charge' request XML": {
+                  "description": "Example sync purchase 'charge' request XML",
+                  "value": "<charge-request>\r\n  <currency>USD</currency>\r\n  <merchant-data>TY235g897qWs</merchant-data>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-item-description>Puzzle game</merchant-item-description>\r\n  <merchant-request-id>1002008</merchant-request-id>\r\n  <merchant-transaction-id>9002005</merchant-transaction-id>\r\n  <optin-id>IVXecDoa2f6Y3oOqp1f7</optin-id>\r\n  <total-amount>5</total-amount>\r\n  <timeout after=\"10000\" />\r\n  <consumer-ip-address>24.196.237.108</consumer-ip-address>\r\n</charge-request>"
+                },
+                "Example async purchase 'charge' request XML": {
+                  "description": "Example async purchase 'charge' request XML",
+                  "value": "<charge-request>\r\n  <currency>USD</currency>\r\n  <merchant-data>TY235g897qWs</merchant-data>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-item-description>Puzzle game</merchant-item-description>\r\n  <merchant-request-id>1002008</merchant-request-id>\r\n  <merchant-transaction-id>9002005</merchant-transaction-id>\r\n  <optin-id>IVXecDoa2f6Y3oOqp1f7</optin-id>\r\n  <total-amount>5</total-amount>\r\n  <timeout after=\"0\" />\r\n  <consumer-ip-address>24.196.237.108</consumer-ip-address>\r\n</charge-request>"
+                },
+                "Example sync purchase 'charge' for monthly subscription renewal request XML": {
+                  "description": "Example sync purchase 'charge' for monthly subscription renewal request XML",
+                  "value": "<charge-request>\r\n  <currency>USD</currency>\r\n  <merchant-data>TY235g897qWs</merchant-data>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-item-description>Puzzle game</merchant-item-description>\r\n  <merchant-request-id>1002008</merchant-request-id>\r\n  <merchant-transaction-id>9002005</merchant-transaction-id>\r\n  <optin-id>IVXecDoa2f6Y3oOqp1f7</optin-id>\r\n  <total-amount>5</total-amount>\r\n  <timeout after=\"10000\" />\r\n  <consumer-ip-address>24.196.237.108</consumer-ip-address>\r\n  <subscription is-subscription=\"true\">\r\n    <period count=\"1\">\r\n      <unit>month</unit>\r\n    </period>\r\n    <renewal>true</renewal>\r\n  </subscription>\r\n</charge-request>"
+                },
+                "Example sync purchase 'charge' request for specific seller of record XML": {
+                  "description": "Example sync purchase 'charge' request for specific seller of record XML",
+                  "value": "<charge-request>\r\n  <currency>USD</currency>\r\n  <merchant-data>TY235g897qWs</merchant-data>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-item-description>Puzzle game</merchant-item-description>\r\n  <merchant-request-id>1002008</merchant-request-id>\r\n  <merchant-transaction-id>9002005</merchant-transaction-id>\r\n  <optin-id>IVXecDoa2f6Y3oOqp1f7</optin-id>\r\n  <total-amount>5</total-amount>\r\n  <seller-of-record>\r\n    <id>73tdolramou0m6jnqyb6pkk3</id>\r\n  </seller-of-record>\r\n  <timeout after=\"10000\" />\r\n  <consumer-ip-address>24.196.237.108</consumer-ip-address>\r\n</charge-request>"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "content": {
+              "application/xml": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ChargeResponse"
+                    },
+                    {
+                      "description": "'charge' Response - General Elements",
+                      "xml": {
+                        "name": "charge-response",
+                        "attribute": false,
+                        "wrapped": false
+                      },
+                      "examples": [
+                        "<charge-response>\r\n  <result>\r\n    <reason-code>0</reason-code>\r\n    <message>Operation Successful</message>\r\n    <retriable>false</retriable>\r\n    <status>OK</status>\r\n  </result>\r\n  <timestamp>2015-02-40 04:44:16</timestamp>\r\n  <charge-id>b368363a00bbddbf794eba33</charge-id>\r\n  <charge-status>success</charge-status>\r\n  <merchant-data>TY235g897qWs</merchant-data>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-request-id>1002008</merchant-request-id>\r\n  <merchant-transaction-id>9002005</merchant-transaction-id>\r\n  <optin-id>IVXecDoa2f6Y3oOqp1f7</optin-id>\r\n  <country>DE</country>\r\n  <network-id>de-super</network-id>\r\n</charge-response>",
+                        "<charge-response>\r\n  <result>\r\n    <reason-code>23</reason-code>\r\n    <message>Submitted and in progress</message>\r\n    <retriable>false</retriable>\r\n    <status>OK</status>\r\n  </result>\r\n  <timestamp>2015-02-40 04:44:16</timestamp>\r\n  <charge-id>b368363a00bbddbf794eba33</charge-id>\r\n  <charge-status>in-progress</charge-status>\r\n  <merchant-data>TY235g897qWs</merchant-data>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-request-id>1002008</merchant-request-id>\r\n  <merchant-transaction-id>9002005</merchant-transaction-id>\r\n  <optin-id>IVXecDoa2f6Y3oOqp1f7</optin-id>\r\n  <country>DE</country>\r\n  <network-id>de-super</network-id>\r\n</charge-response>",
+                        "<charge-response>\r\n  <result>\r\n    <reason-code>0</reason-code>\r\n    <message>Operation Successful</message>\r\n    <retriable>false</retriable>\r\n    <status>OK</status>\r\n  </result>\r\n  <timestamp>2015-02-40 04:44:16</timestamp>\r\n  <charge-id>b368363a00bbddbf794eba33</charge-id>\r\n  <charge-status>success</charge-status>\r\n  <merchant-data>TY235g897qWs</merchant-data>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-request-id>1002008</merchant-request-id>\r\n  <merchant-transaction-id>9002005</merchant-transaction-id>\r\n  <optin-id>IVXecDoa2f6Y3oOqp1f7</optin-id>\r\n  <country>DE</country>\r\n  <network-id>de-super</network-id>\r\n  <seller-of-record>\r\n    <id>73tdolramou0m6jnqyb6pkk3</id>\r\n  </seller-of-record>\r\n</charge-response>"
+                      ]
+                    }
+                  ],
+                  "contentMediaType": "application/xml"
+                },
+                "examples": {
+                  "Example 'charge' success response XML": {
+                    "description": "Example 'charge' success response XML",
+                    "value": "<charge-response>\r\n  <result>\r\n    <reason-code>0</reason-code>\r\n    <message>Operation Successful</message>\r\n    <retriable>false</retriable>\r\n    <status>OK</status>\r\n  </result>\r\n  <timestamp>2015-02-40 04:44:16</timestamp>\r\n  <charge-id>b368363a00bbddbf794eba33</charge-id>\r\n  <charge-status>success</charge-status>\r\n  <merchant-data>TY235g897qWs</merchant-data>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-request-id>1002008</merchant-request-id>\r\n  <merchant-transaction-id>9002005</merchant-transaction-id>\r\n  <optin-id>IVXecDoa2f6Y3oOqp1f7</optin-id>\r\n  <country>DE</country>\r\n  <network-id>de-super</network-id>\r\n</charge-response>"
+                  },
+                  "Example 'charge' in-progress response XML": {
+                    "description": "Example 'charge' in-progress response XML",
+                    "value": "<charge-response>\r\n  <result>\r\n    <reason-code>23</reason-code>\r\n    <message>Submitted and in progress</message>\r\n    <retriable>false</retriable>\r\n    <status>OK</status>\r\n  </result>\r\n  <timestamp>2015-02-40 04:44:16</timestamp>\r\n  <charge-id>b368363a00bbddbf794eba33</charge-id>\r\n  <charge-status>in-progress</charge-status>\r\n  <merchant-data>TY235g897qWs</merchant-data>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-request-id>1002008</merchant-request-id>\r\n  <merchant-transaction-id>9002005</merchant-transaction-id>\r\n  <optin-id>IVXecDoa2f6Y3oOqp1f7</optin-id>\r\n  <country>DE</country>\r\n  <network-id>de-super</network-id>\r\n</charge-response>"
+                  },
+                  "Example 'charge' success for seller of record response XML": {
+                    "description": "Example 'charge' success for seller of record response XML",
+                    "value": "<charge-response>\r\n  <result>\r\n    <reason-code>0</reason-code>\r\n    <message>Operation Successful</message>\r\n    <retriable>false</retriable>\r\n    <status>OK</status>\r\n  </result>\r\n  <timestamp>2015-02-40 04:44:16</timestamp>\r\n  <charge-id>b368363a00bbddbf794eba33</charge-id>\r\n  <charge-status>success</charge-status>\r\n  <merchant-data>TY235g897qWs</merchant-data>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-request-id>1002008</merchant-request-id>\r\n  <merchant-transaction-id>9002005</merchant-transaction-id>\r\n  <optin-id>IVXecDoa2f6Y3oOqp1f7</optin-id>\r\n  <country>DE</country>\r\n  <network-id>de-super</network-id>\r\n  <seller-of-record>\r\n    <id>73tdolramou0m6jnqyb6pkk3</id>\r\n  </seller-of-record>\r\n</charge-response>"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "parameters": []
+    },
+    "/billing/3.0/query-charge": {
+      "post": {
+        "tags": [
+          "Charge",
+          "tag2"
+        ],
+        "summary": "queryCharge",
+        "description": "Retrieves the status and all details of prior charges matching the given request criteria.\n\nEach returned charge element is similar to a charge-response: although some elements are missing, all present elements have the same names, format and meaning as those in the original charge-response.\n\nThe query-charge API call is guaranteed to return transactions up to 1 year old. If the transaction was created before that period, this API may return no results.\n\nCriteria are evaluated in an AND fashion, i.e. if more than one field is supplied then all will be used to filter the returned charge elements. In normal usage this is not relevant, since you would only supply one of the three fields by itself.",
+        "operationId": "queryCharge",
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "$ref": "#/components/schemas/Content-Type"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/xml": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/QueryChargeRequest"
+                  },
+                  {
+                    "xml": {
+                      "name": "query-charge-request",
+                      "attribute": false,
+                      "wrapped": false
+                    },
+                    "examples": [
+                      "<query-charge-request>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <country>US</country>\r\n  <merchant-transaction-id>9002005</merchant-transaction-id>\r\n</query-charge-request>"
+                    ]
+                  }
+                ],
+                "contentMediaType": "application/xml"
+              },
+              "examples": {
+                "Example 'query-charge' request XML": {
+                  "description": "Example 'query-charge' request XML",
+                  "value": "<query-charge-request>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <country>US</country>\r\n  <merchant-transaction-id>9002005</merchant-transaction-id>\r\n</query-charge-request>"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "content": {
+              "application/xml": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/QueryChargeResponse"
+                    },
+                    {
+                      "xml": {
+                        "name": "query-charge-response",
+                        "attribute": false,
+                        "wrapped": false
+                      },
+                      "examples": [
+                        "<query-charge-response>\r\n  <result>\r\n    <reason-code>0</reason-code>\r\n    <message>Found 1 result(s)</message>\r\n    <retriable>false</retriable>\r\n    <status>OK</status>\r\n  </result>\r\n  <charges>\r\n    <charges>\r\n      <result>\r\n        <reason-code>0</reason-code>\r\n        <message>Operation successful</message>\r\n        <retriable>false</retriable>\r\n        <status>OK</status>\r\n      </result>\r\n      <charge-status>success</charge-status>\r\n      <charge-id>b368363a00bbddbf794eba33</charge-id>\r\n      <timestamp>2015-02-40 04:44:16</timestamp>\r\n      <merchant-id>gatewaymerchant</merchant-id>\r\n      <merchant-transaction-id>9002005</merchant-transaction-id>\r\n      <country>DE</country>\r\n      <network-id>de-super</network-id>\r\n      <currency>USD</currency>\r\n      <total-amount>5</total-amount>\r\n      <merchant-item-description>Puzzle game</merchant-item-description>\r\n    </charges>\r\n  </charges>\r\n</query-charge-response>",
+                        "<query-charge-response>\r\n  <result>\r\n    <reason-code>0</reason-code>\r\n    <message>Found 1 result(s)</message>\r\n    <retriable>false</retriable>\r\n    <status>OK</status>\r\n  </result>\r\n  <charges>\r\n    <charges>\r\n      <result>\r\n        <reason-code>3</reason-code>\r\n        <message>Failed - Insufficient funds</message>\r\n        <retriable>false</retriable>\r\n        <status>ERROR</status>\r\n      </result>\r\n      <charge-status>failed</charge-status>\r\n      <charge-id>b368363a00bbddbf794eba33</charge-id>\r\n      <timestamp>2015-02-40 04:44:16</timestamp>\r\n      <merchant-id>gatewaymerchant</merchant-id>\r\n      <merchant-transaction-id>9002005</merchant-transaction-id>\r\n      <country>DE</country>\r\n      <network-id>de-super</network-id>\r\n      <currency>USD</currency>\r\n      <total-amount>5</total-amount>\r\n      <merchant-item-description>Puzzle game</merchant-item-description>\r\n    </charges>\r\n  </charges>\r\n</query-charge-response>",
+                        "<query-charge-response>\r\n  <result>\r\n    <reason-code>0</reason-code>\r\n    <message>Found 0 result(s)</message>\r\n    <retriable>false</retriable>\r\n    <status>OK</status>\r\n  </result>\r\n  <charges />\r\n</query-charge-response>"
+                      ]
+                    }
+                  ],
+                  "contentMediaType": "application/xml"
+                },
+                "examples": {
+                  "Example 'query-charge' response XML: single successful charge result": {
+                    "description": "Example 'query-charge' response XML: single successful charge result",
+                    "value": "<query-charge-response>\r\n  <result>\r\n    <reason-code>0</reason-code>\r\n    <message>Found 1 result(s)</message>\r\n    <retriable>false</retriable>\r\n    <status>OK</status>\r\n  </result>\r\n  <charges>\r\n    <charges>\r\n      <result>\r\n        <reason-code>0</reason-code>\r\n        <message>Operation successful</message>\r\n        <retriable>false</retriable>\r\n        <status>OK</status>\r\n      </result>\r\n      <charge-status>success</charge-status>\r\n      <charge-id>b368363a00bbddbf794eba33</charge-id>\r\n      <timestamp>2015-02-40 04:44:16</timestamp>\r\n      <merchant-id>gatewaymerchant</merchant-id>\r\n      <merchant-transaction-id>9002005</merchant-transaction-id>\r\n      <country>DE</country>\r\n      <network-id>de-super</network-id>\r\n      <currency>USD</currency>\r\n      <total-amount>5</total-amount>\r\n      <merchant-item-description>Puzzle game</merchant-item-description>\r\n    </charges>\r\n  </charges>\r\n</query-charge-response>"
+                  },
+                  "Example 'query-charge' response XML: single failed charge result": {
+                    "description": "Example 'query-charge' response XML: single failed charge result",
+                    "value": "<query-charge-response>\r\n  <result>\r\n    <reason-code>0</reason-code>\r\n    <message>Found 1 result(s)</message>\r\n    <retriable>false</retriable>\r\n    <status>OK</status>\r\n  </result>\r\n  <charges>\r\n    <charges>\r\n      <result>\r\n        <reason-code>3</reason-code>\r\n        <message>Failed - Insufficient funds</message>\r\n        <retriable>false</retriable>\r\n        <status>ERROR</status>\r\n      </result>\r\n      <charge-status>failed</charge-status>\r\n      <charge-id>b368363a00bbddbf794eba33</charge-id>\r\n      <timestamp>2015-02-40 04:44:16</timestamp>\r\n      <merchant-id>gatewaymerchant</merchant-id>\r\n      <merchant-transaction-id>9002005</merchant-transaction-id>\r\n      <country>DE</country>\r\n      <network-id>de-super</network-id>\r\n      <currency>USD</currency>\r\n      <total-amount>5</total-amount>\r\n      <merchant-item-description>Puzzle game</merchant-item-description>\r\n    </charges>\r\n  </charges>\r\n</query-charge-response>"
+                  },
+                  "Example 'query-charge' response XML: no results": {
+                    "description": "Example 'query-charge' response XML: no results",
+                    "value": "<query-charge-response>\r\n  <result>\r\n    <reason-code>0</reason-code>\r\n    <message>Found 0 result(s)</message>\r\n    <retriable>false</retriable>\r\n    <status>OK</status>\r\n  </result>\r\n  <charges />\r\n</query-charge-response>"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "parameters": []
+    },
+    "/billing/3.0/reverse-charge": {
+      "post": {
+        "tags": [
+          "Charge",
+          "tag2"
+        ],
+        "summary": "reverseCharge",
+        "description": "Reverses a charge request. This method is typically used when the result of a prior charge request is unknown. This can occur for a number of reasons, including:\n\n* Network issue\n* Request timed out by merchant\n* Response received but could not be recorded\n\n* A reversal will be accepted and a status of \"OK\" returned in almost all cases, regardless   of whether Boku actually received the original charge.\n\nAside from general request validation errors, a reversal will only be rejected if the original charge request was issued over 1 hour previously. After the 1 hour time period has expired, reversals are no longer allowed - please refund the transaction if required.",
+        "operationId": "reverseCharge",
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "$ref": "#/components/schemas/Content-Type"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/xml": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ReverseChargeRequest"
+                  },
+                  {
+                    "xml": {
+                      "name": "reverse-charge-request",
+                      "attribute": false,
+                      "wrapped": false
+                    },
+                    "examples": [
+                      "<reverse-charge-request>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-request-id>1002008</merchant-request-id>\r\n  <country>US</country>\r\n</reverse-charge-request>"
+                    ]
+                  }
+                ],
+                "contentMediaType": "application/xml"
+              },
+              "examples": {
+                "Example purchase 'reverse-charge' request XML": {
+                  "description": "Example purchase 'reverse-charge' request XML",
+                  "value": "<reverse-charge-request>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-request-id>1002008</merchant-request-id>\r\n  <country>US</country>\r\n</reverse-charge-request>"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "content": {
+              "application/xml": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ReverseChargeResponse"
+                    },
+                    {
+                      "description": "'reverse-charge' Response - General Elements",
+                      "xml": {
+                        "name": "reverse-charge-response",
+                        "attribute": false,
+                        "wrapped": false
+                      },
+                      "examples": [
+                        "<reverse-charge-response>\r\n  <result>\r\n    <reason-code>0</reason-code>\r\n    <message>Operation Successful</message>\r\n    <retriable>false</retriable>\r\n    <status>OK</status>\r\n  </result>\r\n  <timestamp>2015-02-40 04:44:16</timestamp>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-request-id>1002008</merchant-request-id>\r\n  <reversal-id>tRtbIVXyXVIbtRtytRt</reversal-id>\r\n  <country>DE</country>\r\n</reverse-charge-response>"
+                      ]
+                    }
+                  ],
+                  "contentMediaType": "application/xml"
+                },
+                "examples": {
+                  "'reverse-charge' Example Response XML": {
+                    "description": "'reverse-charge' Example Response XML",
+                    "value": "<reverse-charge-response>\r\n  <result>\r\n    <reason-code>0</reason-code>\r\n    <message>Operation Successful</message>\r\n    <retriable>false</retriable>\r\n    <status>OK</status>\r\n  </result>\r\n  <timestamp>2015-02-40 04:44:16</timestamp>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-request-id>1002008</merchant-request-id>\r\n  <reversal-id>tRtbIVXyXVIbtRtytRt</reversal-id>\r\n  <country>DE</country>\r\n</reverse-charge-response>"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "parameters": []
+    },
+    "/billing/3.0/begin-single-charge": {
+      "post": {
+        "tags": [
+          "Charge",
+          "tag2"
+        ],
+        "summary": "beginSingleCharge",
+        "description": "The purpose of the 'begin-single-charge' API call is to initiate a one time charge. The 'begin-single-charge' call initiates a process in which a consumer is required to authenticate themselves each time a purchase is requested. This API provides a payment option for consumers who choose not to save a payment method with the merchant.\n\nThe Merchant can obtain information on the status of the charge made through the 'begin-single-charge' API in the following ways\n\n* 'query-charge' API\n* notification to a Merchant's notification URL specified in the 'begin-single-charge' request",
+        "operationId": "beginSingleCharge",
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "$ref": "#/components/schemas/Content-Type"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/xml": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/BeginSingleChargeRequest"
+                  },
+                  {
+                    "xml": {
+                      "name": "begin-single-charge-request",
+                      "attribute": false,
+                      "wrapped": false
+                    },
+                    "examples": [
+                      "<begin-single-charge-request>\r\n  <country>US</country>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-request-id>1602044513536</merchant-request-id>\r\n  <merchant-transaction-id>1602044514238</merchant-transaction-id>\r\n  <merchant-item-description>Fun Item</merchant-item-description>\r\n  <currency>USD</currency>\r\n  <total-amount>20</total-amount>\r\n  <timeout after=\"10000\" />\r\n  <payment-method>superwallet</payment-method>\r\n  <charge-type>hosted</charge-type>\r\n  <notification-url>https://www.boku.com/notify</notification-url>\r\n  <hosted>\r\n    <forward-url>https://www.boku.com/forward</forward-url>\r\n  </hosted>\r\n</begin-single-charge-request>",
+                      "<begin-single-charge-request>\r\n  <country>US</country>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-request-id>1602044513536</merchant-request-id>\r\n  <merchant-transaction-id>1602044514238</merchant-transaction-id>\r\n  <merchant-item-description>Fun Item</merchant-item-description>\r\n  <currency>USD</currency>\r\n  <total-amount>20</total-amount>\r\n  <timeout after=\"10000\" />\r\n  <payment-method>superwallet</payment-method>\r\n  <charge-type>hosted</charge-type>\r\n  <notification-url>https://www.boku.com/notify</notification-url>\r\n  <hosted>\r\n    <forward-url>https://www.boku.com/forward</forward-url>\r\n  </hosted>\r\n  <seller-of-record>\r\n    <id>73tdolramou0m6jnqyb6pkk3</id>\r\n  </seller-of-record>\r\n</begin-single-charge-request>"
+                    ]
+                  }
+                ],
+                "contentMediaType": "application/xml"
+              },
+              "examples": {
+                "Example 'begin-single-charge' request XML": {
+                  "description": "Example 'begin-single-charge' request XML",
+                  "value": "<begin-single-charge-request>\r\n  <country>US</country>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-request-id>1602044513536</merchant-request-id>\r\n  <merchant-transaction-id>1602044514238</merchant-transaction-id>\r\n  <merchant-item-description>Fun Item</merchant-item-description>\r\n  <currency>USD</currency>\r\n  <total-amount>20</total-amount>\r\n  <timeout after=\"10000\" />\r\n  <payment-method>superwallet</payment-method>\r\n  <charge-type>hosted</charge-type>\r\n  <notification-url>https://www.boku.com/notify</notification-url>\r\n  <hosted>\r\n    <forward-url>https://www.boku.com/forward</forward-url>\r\n  </hosted>\r\n</begin-single-charge-request>"
+                },
+                "Example 'begin-single-charge' for seller of record request XML": {
+                  "description": "Example 'begin-single-charge' for seller of record request XML",
+                  "value": "<begin-single-charge-request>\r\n  <country>US</country>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-request-id>1602044513536</merchant-request-id>\r\n  <merchant-transaction-id>1602044514238</merchant-transaction-id>\r\n  <merchant-item-description>Fun Item</merchant-item-description>\r\n  <currency>USD</currency>\r\n  <total-amount>20</total-amount>\r\n  <timeout after=\"10000\" />\r\n  <payment-method>superwallet</payment-method>\r\n  <charge-type>hosted</charge-type>\r\n  <notification-url>https://www.boku.com/notify</notification-url>\r\n  <hosted>\r\n    <forward-url>https://www.boku.com/forward</forward-url>\r\n  </hosted>\r\n  <seller-of-record>\r\n    <id>73tdolramou0m6jnqyb6pkk3</id>\r\n  </seller-of-record>\r\n</begin-single-charge-request>"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "content": {
+              "application/xml": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BeginSingleChargeResponse"
+                    },
+                    {
+                      "xml": {
+                        "name": "begin-single-charge-response",
+                        "attribute": false,
+                        "wrapped": false
+                      },
+                      "examples": [
+                        "<begin-single-charge-response>\r\n  <result>\r\n    <reason-code>0</reason-code>\r\n    <message>Operation Successful</message>\r\n    <retriable>false</retriable>\r\n    <status>OK</status>\r\n  </result>\r\n  <timestamp>2020-10-06 21:22:01</timestamp>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-request-id>1602044513536</merchant-request-id>\r\n  <merchant-transaction-id>1602044514238</merchant-transaction-id>\r\n  <charge-id>6n2nmozqd4s0y485gh711o2z</charge-id>\r\n  <charge-status>in-progress</charge-status>\r\n  <country>US</country>\r\n  <payment-method>superwallet</payment-method>\r\n  <hosted>\r\n    <redirect-url>https://www.superwallet.com/authorize</redirect-url>\r\n  </hosted>\r\n</begin-single-charge-response>",
+                        "<begin-single-charge-response>\r\n  <result>\r\n    <reason-code>0</reason-code>\r\n    <message>Operation Successful</message>\r\n    <retriable>false</retriable>\r\n    <status>OK</status>\r\n  </result>\r\n  <timestamp>2020-10-06 21:22:01</timestamp>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-request-id>1602044513536</merchant-request-id>\r\n  <merchant-transaction-id>1602044514238</merchant-transaction-id>\r\n  <charge-id>6n2nmozqd4s0y485gh711o2z</charge-id>\r\n  <charge-status>in-progress</charge-status>\r\n  <country>US</country>\r\n  <payment-method>superwallet</payment-method>\r\n  <hosted>\r\n    <redirect-url>https://www.superwallet.com/authorize</redirect-url>\r\n  </hosted>\r\n  <seller-of-record>\r\n    <id>73tdolramou0m6jnqyb6pkk3</id>\r\n  </seller-of-record>\r\n</begin-single-charge-response>"
+                      ]
+                    }
+                  ],
+                  "contentMediaType": "application/xml"
+                },
+                "examples": {
+                  "begin-single-charge-response": {
+                    "description": "begin-single-charge-response",
+                    "value": "<begin-single-charge-response>\r\n  <result>\r\n    <reason-code>0</reason-code>\r\n    <message>Operation Successful</message>\r\n    <retriable>false</retriable>\r\n    <status>OK</status>\r\n  </result>\r\n  <timestamp>2020-10-06 21:22:01</timestamp>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-request-id>1602044513536</merchant-request-id>\r\n  <merchant-transaction-id>1602044514238</merchant-transaction-id>\r\n  <charge-id>6n2nmozqd4s0y485gh711o2z</charge-id>\r\n  <charge-status>in-progress</charge-status>\r\n  <country>US</country>\r\n  <payment-method>superwallet</payment-method>\r\n  <hosted>\r\n    <redirect-url>https://www.superwallet.com/authorize</redirect-url>\r\n  </hosted>\r\n</begin-single-charge-response>"
+                  },
+                  "begin-single-charge-response for seller of record": {
+                    "description": "begin-single-charge-response for seller of record",
+                    "value": "<begin-single-charge-response>\r\n  <result>\r\n    <reason-code>0</reason-code>\r\n    <message>Operation Successful</message>\r\n    <retriable>false</retriable>\r\n    <status>OK</status>\r\n  </result>\r\n  <timestamp>2020-10-06 21:22:01</timestamp>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-request-id>1602044513536</merchant-request-id>\r\n  <merchant-transaction-id>1602044514238</merchant-transaction-id>\r\n  <charge-id>6n2nmozqd4s0y485gh711o2z</charge-id>\r\n  <charge-status>in-progress</charge-status>\r\n  <country>US</country>\r\n  <payment-method>superwallet</payment-method>\r\n  <hosted>\r\n    <redirect-url>https://www.superwallet.com/authorize</redirect-url>\r\n  </hosted>\r\n  <seller-of-record>\r\n    <id>73tdolramou0m6jnqyb6pkk3</id>\r\n  </seller-of-record>\r\n</begin-single-charge-response>"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "parameters": []
+    }
+  },
+  "components": {
+    "schemas": {
+      "BeginSingleChargeRequest": {
+        "title": "BeginSingleChargeRequest",
+        "required": [
+          "country",
+          "merchantId",
+          "merchantRequestId",
+          "merchantItemDescription",
+          "currency",
+          "totalAmount",
+          "paymentMethod",
+          "chargeType",
+          "hosted"
+        ],
+        "type": "object",
+        "properties": {
+          "country": {
+            "pattern": "^[A-Z]{2}$",
+            "type": "string",
+            "description": "Country code in ISO 3166-1-alpha-2 standard"
+          },
+          "merchantId": {
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string",
+            "description": "Boku assigned merchant ID",
+            "xml": {
+              "name": "merchant-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "merchantRequestId": {
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string",
+            "description": "Unique merchant assigned request ID\n\nMultiple requests received with the same request ID in this field will be handled idempotently within the idempotency window.",
+            "xml": {
+              "name": "merchant-request-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "merchantTransactionId": {
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string",
+            "description": "Merchant assigned transaction ID",
+            "xml": {
+              "name": "merchant-transaction-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "merchantData": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "Merchant supplied meta data. This meta data is returned in the 'begin-single-charge' response and can be available in merchant reports.",
+            "xml": {
+              "name": "merchant-data",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "merchantItemDescription": {
+            "maxLength": 255,
+            "minLength": 1,
+            "type": "string",
+            "description": "A purchase description of the item.",
+            "xml": {
+              "name": "merchant-item-description",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "merchantConsumerId": {
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string",
+            "description": "Consumer id assigned by the merchant",
+            "xml": {
+              "name": "merchant-consumer-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "currency": {
+            "pattern": "^[A-Z]{3}$",
+            "type": "string",
+            "description": "ISO 4217 3 letter currency code."
+          },
+          "totalAmount": {
+            "minimum": 0.001,
+            "type": "number",
+            "description": "Total amount to charge, including tax",
+            "xml": {
+              "name": "total-amount",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "timeout": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Timeout"
+              },
+              {
+                "description": "Specifies how long to block waiting for a response",
+                "xml": {
+                  "name": "timeout",
+                  "attribute": false,
+                  "wrapped": false
+                },
+                "examples": [
+                  "<timeout after=\"10000\" />"
+                ]
+              }
+            ]
+          },
+          "consumerIpAddress": {
+            "maxLength": 20,
+            "minLength": 1,
+            "type": "string",
+            "description": "The IP address of the consumer. Must be IPv4 address.",
+            "xml": {
+              "name": "consumer-ip-address",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "paymentMethod": {
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string",
+            "description": "The payment method the consumer has selected.\n\nEach wallet provider will be its own payment method. A list of available values will be provided on demand.",
+            "xml": {
+              "name": "payment-method",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "chargeType": {
+            "const": "hosted",
+            "type": "string",
+            "description": "Type of charge",
+            "xml": {
+              "name": "charge-type",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "notificationUrl": {
+            "maxLength": 255,
+            "minLength": 1,
+            "type": "string",
+            "description": "Supplies the URL for Boku to send a notification once the charge is complete",
+            "xml": {
+              "name": "notification-url",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "hosted": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BeginSingleChargeRequestHosted"
+              },
+              {
+                "xml": {
+                  "name": "hosted",
+                  "attribute": false,
+                  "wrapped": false
+                },
+                "examples": [
+                  "<hosted>\r\n  <forward-url>https://www.boku.com/forward</forward-url>\r\n</hosted>"
+                ]
+              }
+            ]
+          },
+          "sellerOfRecord": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SellerOfRecord"
+              },
+              {
+                "description": "Optin and Charge Request API can be made for specific Seller of Record previously registered with Boku.",
+                "xml": {
+                  "name": "seller-of-record",
+                  "attribute": false,
+                  "wrapped": false
+                },
+                "examples": [
+                  "<seller-of-record>\r\n  <id>73tdolramou0m6jnqyb6pkk3</id>\r\n</seller-of-record>"
+                ]
+              }
+            ]
+          }
+        },
+        "description": "'begin-single-charge' Request - General Parameters",
+        "xml": {
+          "name": "begin-single-charge-request",
+          "attribute": false,
+          "wrapped": false
+        },
+        "examples": [
+          "<begin-single-charge-request>\r\n  <country>US</country>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-request-id>1602044513536</merchant-request-id>\r\n  <merchant-transaction-id>1602044514238</merchant-transaction-id>\r\n  <merchant-item-description>Fun Item</merchant-item-description>\r\n  <currency>USD</currency>\r\n  <total-amount>20</total-amount>\r\n  <timeout after=\"10000\" />\r\n  <payment-method>superwallet</payment-method>\r\n  <charge-type>hosted</charge-type>\r\n  <notification-url>https://www.boku.com/notify</notification-url>\r\n  <hosted>\r\n    <forward-url>https://www.boku.com/forward</forward-url>\r\n  </hosted>\r\n</begin-single-charge-request>"
+        ]
+      },
+      "BeginSingleChargeRequestHosted": {
+        "title": "BeginSingleChargeRequestHosted",
+        "required": [
+          "forwardUrl"
+        ],
+        "type": "object",
+        "properties": {
+          "forwardUrl": {
+            "maxLength": 2048,
+            "minLength": 1,
+            "type": "string",
+            "description": "Supplies the URL for Boku to redirect the consumer back to the merchant UI to complete authentication.",
+            "xml": {
+              "name": "forward-url",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "useMobileFlow": {
+            "type": "boolean",
+            "description": "True if a mobile-optimized purchase flow should be used for this request, false otherwise.\n\nExample: A non-mobile-optimized flow could display a QR code on the user's mobile. The user would be unable to scan the QR code because they are already on their mobile.\n\nA mobile-optimized flow could display a mobile login page to the user.",
+            "default": false,
+            "xml": {
+              "name": "use-mobile-flow",
+              "attribute": false,
+              "wrapped": false
+            }
+          }
+        },
+        "xml": {
+          "name": "hosted",
+          "attribute": false,
+          "wrapped": false
+        },
+        "examples": [
+          "<hosted>\r\n  <forward-url>https://www.boku.com/forward</forward-url>\r\n</hosted>"
+        ]
+      },
+      "BeginSingleChargeResponse": {
+        "title": "BeginSingleChargeResponse",
+        "required": [
+          "result",
+          "merchantId",
+          "merchantRequestId",
+          "paymentMethod"
+        ],
+        "type": "object",
+        "properties": {
+          "result": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Result"
+              },
+              {
+                "description": "The 'result' element is defined in every response type. It is used to convey the outcome of an API request.",
+                "xml": {
+                  "name": "result",
+                  "attribute": false,
+                  "wrapped": false
+                },
+                "examples": [
+                  "<result>\r\n  <reason-code>0</reason-code>\r\n  <message>Operation Successful</message>\r\n  <retriable>false</retriable>\r\n  <status>OK</status>\r\n</result>"
+                ]
+              }
+            ]
+          },
+          "timestamp": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Time request was received (\"YYYY-MM-DD hh:mm:ss\").\n\nAll timestamps are in UTC."
+          },
+          "merchantId": {
+            "maxLength": 50,
+            "type": "string",
+            "description": "Boku assigned merchant ID",
+            "xml": {
+              "name": "merchant-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "merchantRequestId": {
+            "maxLength": 50,
+            "type": "string",
+            "description": "Merchant assigned unique request ID",
+            "xml": {
+              "name": "merchant-request-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "merchantTransactionId": {
+            "maxLength": 128,
+            "type": "string",
+            "description": "Merchant assigned transaction ID",
+            "xml": {
+              "name": "merchant-transaction-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "merchantData": {
+            "type": "string",
+            "description": "Merchant supplied metadata",
+            "xml": {
+              "name": "merchant-data",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "chargeId": {
+            "maxLength": 24,
+            "type": "string",
+            "description": "Unique ID for each charge generated by Boku.\nIf null, means no charge was created, e.g. because the request was rejected.",
+            "xml": {
+              "name": "charge-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "chargeStatus": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ChargeStatus"
+              },
+              {
+                "description": "Status of the charge at the time this response was returned.\n\nIf 'in-progress' is returned, the charge call should be re-issued with the same request ID until a final status is reached.\nIf null, means no charge was created, e.g. because the request was rejected.",
+                "xml": {
+                  "name": "charge-status",
+                  "attribute": false,
+                  "wrapped": false
+                }
+              }
+            ]
+          },
+          "country": {
+            "pattern": "^[A-Z]{2}$",
+            "type": "string",
+            "description": "Country code in ISO 3166-1-alpha-2 standard"
+          },
+          "paymentMethod": {
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string",
+            "description": "The payment method selected",
+            "xml": {
+              "name": "payment-method",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "hosted": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BeginSingleChargeResponseHosted"
+              },
+              {
+                "xml": {
+                  "name": "hosted",
+                  "attribute": false,
+                  "wrapped": false
+                },
+                "examples": [
+                  "<hosted>\r\n  <redirect-url>https://www.superwallet.com/authorize</redirect-url>\r\n</hosted>"
+                ]
+              }
+            ]
+          },
+          "sellerOfRecord": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SellerOfRecord"
+              },
+              {
+                "description": "Optin and Charge Request API can be made for specific Seller of Record previously registered with Boku.",
+                "xml": {
+                  "name": "seller-of-record",
+                  "attribute": false,
+                  "wrapped": false
+                },
+                "examples": [
+                  "<seller-of-record>\r\n  <id>73tdolramou0m6jnqyb6pkk3</id>\r\n</seller-of-record>"
+                ]
+              }
+            ]
+          }
+        },
+        "xml": {
+          "name": "begin-single-charge-response",
+          "attribute": false,
+          "wrapped": false
+        },
+        "examples": [
+          "<begin-single-charge-response>\r\n  <result>\r\n    <reason-code>0</reason-code>\r\n    <message>Operation Successful</message>\r\n    <retriable>false</retriable>\r\n    <status>OK</status>\r\n  </result>\r\n  <timestamp>2020-10-06 21:22:01</timestamp>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-request-id>1602044513536</merchant-request-id>\r\n  <merchant-transaction-id>1602044514238</merchant-transaction-id>\r\n  <charge-id>6n2nmozqd4s0y485gh711o2z</charge-id>\r\n  <charge-status>in-progress</charge-status>\r\n  <country>US</country>\r\n  <payment-method>superwallet</payment-method>\r\n  <hosted>\r\n    <redirect-url>https://www.superwallet.com/authorize</redirect-url>\r\n  </hosted>\r\n</begin-single-charge-response>"
+        ]
+      },
+      "BeginSingleChargeResponseHosted": {
+        "title": "BeginSingleChargeResponseHosted",
+        "required": [
+          "redirectUrl"
+        ],
+        "type": "object",
+        "properties": {
+          "redirectUrl": {
+            "maxLength": 2048,
+            "type": "string",
+            "description": "URL, where the user should be redirected to so the charge, can be authorized",
+            "xml": {
+              "name": "redirect-url",
+              "attribute": false,
+              "wrapped": false
+            }
+          }
+        },
+        "xml": {
+          "name": "hosted",
+          "attribute": false,
+          "wrapped": false
+        },
+        "examples": [
+          "<hosted>\r\n  <redirect-url>https://www.superwallet.com/authorize</redirect-url>\r\n</hosted>"
+        ]
+      },
+      "Charge": {
+        "title": "Charge",
+        "required": [
+          "result",
+          "chargeStatus",
+          "chargeId",
+          "timestamp",
+          "merchantId",
+          "country",
+          "networkId",
+          "currency",
+          "totalAmount",
+          "merchantItemDescription"
+        ],
+        "type": "object",
+        "properties": {
+          "result": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Result"
+              },
+              {
+                "description": "The 'result' element is defined in every response type. It is used to convey the outcome of an API request.",
+                "xml": {
+                  "name": "result",
+                  "attribute": false,
+                  "wrapped": false
+                },
+                "examples": [
+                  "<result>\r\n  <reason-code>0</reason-code>\r\n  <message>Operation Successful</message>\r\n  <retriable>false</retriable>\r\n  <status>OK</status>\r\n</result>"
+                ]
+              }
+            ]
+          },
+          "chargeStatus": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ChargeStatus"
+              },
+              {
+                "description": "Status of the charge at the time this response was returned.\n\nIf 'in-progress' is returned, the charge call should be re-issued with the same request ID until a final status is reached.\nIf null, means no charge was created, e.g. because the request was rejected.",
+                "xml": {
+                  "name": "charge-status",
+                  "attribute": false,
+                  "wrapped": false
+                }
+              }
+            ]
+          },
+          "chargeId": {
+            "maxLength": 24,
+            "type": "string",
+            "description": "Unique ID for the charge generated by Boku.",
+            "xml": {
+              "name": "charge-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "timestamp": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Time original charge request was received (\"YYYY-MM-DD hh:mm:ss\").\n\nAll timestamps are in UTC."
+          },
+          "merchantId": {
+            "maxLength": 50,
+            "type": "string",
+            "description": "Boku assigned merchant ID",
+            "xml": {
+              "name": "merchant-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "merchantTransactionId": {
+            "maxLength": 128,
+            "type": "string",
+            "description": "Merchant assigned transaction ID",
+            "xml": {
+              "name": "merchant-transaction-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "country": {
+            "pattern": "^[A-Z]{2}$",
+            "type": "string",
+            "description": "Country code in ISO 3166-1-alpha-2 standard"
+          },
+          "networkId": {
+            "maxLength": 10,
+            "type": "string",
+            "description": "Issuer's Network ID",
+            "xml": {
+              "name": "network-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "currency": {
+            "pattern": "^[A-Z]{3}$",
+            "type": "string",
+            "description": "ISO 4217 3 letter currency code."
+          },
+          "totalAmount": {
+            "minimum": 0.001,
+            "type": "number",
+            "description": "Total amount charged or attempted to charge, including tax",
+            "xml": {
+              "name": "total-amount",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "merchantItemDescription": {
+            "maxLength": 255,
+            "type": "string",
+            "description": "A short purchase description that appears on the consumer bill.",
+            "xml": {
+              "name": "merchant-item-description",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "reversal": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Reversal"
+              },
+              {
+                "description": "Contains information about the reversal status of this transaction.\nIf present, charge may be considered reversed. If not present, no reversal request has been received.",
+                "xml": {
+                  "name": "reversal",
+                  "attribute": false,
+                  "wrapped": false
+                },
+                "examples": [
+                  "<reversal>\r\n  <timestamp>2015-02-40 04:44:16</timestamp>\r\n  <reversal-id>tRtbIVXyXVIbtRtytRt</reversal-id>\r\n</reversal>"
+                ]
+              }
+            ]
+          },
+          "merchantData": {
+            "type": "string",
+            "description": "Merchant supplied meta data",
+            "xml": {
+              "name": "merchant-data",
+              "attribute": false,
+              "wrapped": false
+            }
+          }
+        },
+        "xml": {
+          "name": "charge",
+          "attribute": false,
+          "wrapped": false
+        },
+        "examples": [
+          "<charge>\r\n  <result>\r\n    <reason-code>0</reason-code>\r\n    <message>Operation successful</message>\r\n    <retriable>false</retriable>\r\n    <status>OK</status>\r\n  </result>\r\n  <charge-status>success</charge-status>\r\n  <charge-id>b368363a00bbddbf794eba33</charge-id>\r\n  <timestamp>2015-02-40 04:44:16</timestamp>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-transaction-id>9002005</merchant-transaction-id>\r\n  <country>DE</country>\r\n  <network-id>de-super</network-id>\r\n  <currency>USD</currency>\r\n  <total-amount>5</total-amount>\r\n  <merchant-item-description>Puzzle game</merchant-item-description>\r\n</charge>"
+        ]
+      },
+      "ChargeRequest": {
+        "title": "ChargeRequest",
+        "required": [
+          "merchantId",
+          "merchantRequestId",
+          "merchantItemDescription",
+          "optinId",
+          "currency",
+          "totalAmount"
+        ],
+        "type": "object",
+        "properties": {
+          "merchantId": {
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string",
+            "description": "Boku assigned merchant ID",
+            "xml": {
+              "name": "merchant-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "merchantRequestId": {
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string",
+            "description": "Unique merchant assigned request ID\n\nMultiple requests received with the same request ID in this field will be handled idempotently within the idempotency window.",
+            "xml": {
+              "name": "merchant-request-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "merchantTransactionId": {
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string",
+            "description": "Merchant assigned transaction ID",
+            "xml": {
+              "name": "merchant-transaction-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "merchantData": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "Merchant supplied meta data. This meta data is returned in the 'charge' response and can be available in merchant reports.",
+            "xml": {
+              "name": "merchant-data",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "merchantItemDescription": {
+            "maxLength": 255,
+            "minLength": 1,
+            "type": "string",
+            "description": "A short purchase description that appears on the consumer bill. A string longer than 20 characters will be truncated.",
+            "xml": {
+              "name": "merchant-item-description",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "optinId": {
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string",
+            "description": "Boku assigned consumer opt-in ID",
+            "xml": {
+              "name": "optin-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "currency": {
+            "pattern": "^[A-Z]{3}$",
+            "type": "string",
+            "description": "ISO 4217 3 letter currency code."
+          },
+          "totalAmount": {
+            "minimum": 0.001,
+            "type": "number",
+            "description": "Total amount to charge, including tax",
+            "xml": {
+              "name": "total-amount",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "timeout": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Timeout"
+              },
+              {
+                "description": "Specifies how long to block waiting for a response",
+                "xml": {
+                  "name": "timeout",
+                  "attribute": false,
+                  "wrapped": false
+                },
+                "examples": [
+                  "<timeout after=\"10000\" />"
+                ]
+              }
+            ]
+          },
+          "consumerIpAddress": {
+            "maxLength": 20,
+            "minLength": 1,
+            "type": "string",
+            "description": "IP address of consumer. Must be IPv4 address.",
+            "xml": {
+              "name": "consumer-ip-address",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "subscription": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Subscription"
+              },
+              {
+                "xml": {
+                  "name": "subscription",
+                  "attribute": false,
+                  "wrapped": false
+                },
+                "examples": [
+                  "<subscription is-subscription=\"true\">\r\n  <period count=\"1\">\r\n    <unit>month</unit>\r\n  </period>\r\n  <renewal>true</renewal>\r\n</subscription>"
+                ]
+              }
+            ]
+          },
+          "sellerOfRecord": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SellerOfRecord"
+              },
+              {
+                "description": "Optin and Charge Request API can be made for specific Seller of Record previously registered with Boku.",
+                "xml": {
+                  "name": "seller-of-record",
+                  "attribute": false,
+                  "wrapped": false
+                },
+                "examples": [
+                  "<seller-of-record>\r\n  <id>73tdolramou0m6jnqyb6pkk3</id>\r\n</seller-of-record>"
+                ]
+              }
+            ]
+          }
+        },
+        "description": "'charge' Request - General Parameters",
+        "xml": {
+          "name": "charge-request",
+          "attribute": false,
+          "wrapped": false
+        },
+        "examples": [
+          "<charge-request>\r\n  <currency>USD</currency>\r\n  <merchant-data>TY235g897qWs</merchant-data>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-item-description>Puzzle game</merchant-item-description>\r\n  <merchant-request-id>1002008</merchant-request-id>\r\n  <merchant-transaction-id>9002005</merchant-transaction-id>\r\n  <optin-id>IVXecDoa2f6Y3oOqp1f7</optin-id>\r\n  <total-amount>5</total-amount>\r\n  <timeout after=\"10000\" />\r\n  <consumer-ip-address>24.196.237.108</consumer-ip-address>\r\n</charge-request>"
+        ]
+      },
+      "ChargeResponse": {
+        "title": "ChargeResponse",
+        "required": [
+          "result",
+          "merchantId",
+          "merchantRequestId",
+          "optinId"
+        ],
+        "type": "object",
+        "properties": {
+          "result": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Result"
+              },
+              {
+                "description": "The 'result' element is defined in every response type. It is used to convey the outcome of an API request.",
+                "xml": {
+                  "name": "result",
+                  "attribute": false,
+                  "wrapped": false
+                },
+                "examples": [
+                  "<result>\r\n  <reason-code>0</reason-code>\r\n  <message>Operation Successful</message>\r\n  <retriable>false</retriable>\r\n  <status>OK</status>\r\n</result>"
+                ]
+              }
+            ]
+          },
+          "timestamp": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Time request was received (\"YYYY-MM-DD hh:mm:ss\").\n\nAll timestamps are in UTC"
+          },
+          "merchantId": {
+            "maxLength": 50,
+            "type": "string",
+            "description": "Boku assigned merchant ID",
+            "xml": {
+              "name": "merchant-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "merchantRequestId": {
+            "maxLength": 50,
+            "type": "string",
+            "description": "Merchant assigned unique request ID",
+            "xml": {
+              "name": "merchant-request-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "merchantTransactionId": {
+            "maxLength": 128,
+            "type": "string",
+            "description": "Merchant assigned transaction ID",
+            "xml": {
+              "name": "merchant-transaction-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "merchantData": {
+            "type": "string",
+            "description": "Merchant supplied meta data",
+            "xml": {
+              "name": "merchant-data",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "optinId": {
+            "maxLength": 24,
+            "type": "string",
+            "description": "Boku assigned consumer opt-in ID",
+            "xml": {
+              "name": "optin-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "chargeId": {
+            "maxLength": 24,
+            "type": "string",
+            "description": "Unique ID for each charge generated by Boku.\nIf null, means no charge was created, e.g. because the request was rejected.",
+            "xml": {
+              "name": "charge-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "chargeStatus": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ChargeStatus"
+              },
+              {
+                "description": "Status of the charge at the time this response was returned.\n\nIf 'in-progress' is returned, the charge call should be re-issued with the same request ID until a final status is reached.\nIf null, means no charge was created, e.g. because the request was rejected.",
+                "xml": {
+                  "name": "charge-status",
+                  "attribute": false,
+                  "wrapped": false
+                }
+              }
+            ]
+          },
+          "country": {
+            "pattern": "^[A-Z]{2}$",
+            "type": "string",
+            "description": "Country code in ISO 3166-1-alpha-2 standard"
+          },
+          "networkId": {
+            "maxLength": 10,
+            "type": "string",
+            "description": "Issuer's Network ID",
+            "xml": {
+              "name": "network-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "sellerOfRecord": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SellerOfRecord"
+              },
+              {
+                "description": "Optin and Charge Request API can be made for specific Seller of Record previously registered with Boku.",
+                "xml": {
+                  "name": "seller-of-record",
+                  "attribute": false,
+                  "wrapped": false
+                },
+                "examples": [
+                  "<seller-of-record>\r\n  <id>73tdolramou0m6jnqyb6pkk3</id>\r\n</seller-of-record>"
+                ]
+              }
+            ]
+          },
+          "settlement": {
+            "$ref": "#/components/schemas/Settlement"
+          }
+        },
+        "description": "'charge' Response - General Elements",
+        "xml": {
+          "name": "charge-response",
+          "attribute": false,
+          "wrapped": false
+        },
+        "examples": [
+          "<charge-response>\r\n  <result>\r\n    <reason-code>0</reason-code>\r\n    <message>Operation Successful</message>\r\n    <retriable>false</retriable>\r\n    <status>OK</status>\r\n  </result>\r\n  <timestamp>2015-02-40 04:44:16</timestamp>\r\n  <charge-id>b368363a00bbddbf794eba33</charge-id>\r\n  <charge-status>success</charge-status>\r\n  <merchant-data>TY235g897qWs</merchant-data>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-request-id>1002008</merchant-request-id>\r\n  <merchant-transaction-id>9002005</merchant-transaction-id>\r\n  <optin-id>IVXecDoa2f6Y3oOqp1f7</optin-id>\r\n  <country>DE</country>\r\n  <network-id>de-super</network-id>\r\n</charge-response>"
+        ]
+      },
+      "InvalidRequestField": {
+        "title": "InvalidRequestField",
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Property path of the field that was in error. The element or attribute name is given in camel-case, with nested objects delimited by `.` (period)\n\nIf there are multiple distinct errors regarding a particular field, it may appear more than once. I.e. `field[path]` is not necessarily unique.",
+            "xml": {
+              "attribute": true,
+              "wrapped": false
+            }
+          },
+          "reason": {
+            "type": "string",
+            "description": "A descriptive reason why the field was invalid. This message is not localized and so is not appropriate for user messaging.",
+            "xml": {
+              "attribute": true,
+              "wrapped": false
+            }
+          }
+        },
+        "description": "Provides per-field error information in the case where the submitted request did not satisfy validation constraints.",
+        "xml": {
+          "name": "field",
+          "attribute": false,
+          "wrapped": false
+        },
+        "examples": [
+          "<field path=\"hosted\" reason=\"may not be null\" />"
+        ]
+      },
+      "Period": {
+        "title": "Period",
+        "required": [
+          "unit",
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "unit": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PeriodUnit"
+              },
+              {
+                "description": "A period is comprised of a unit of time (day, week, month, year) and a count (how many units per period).\n\nFor example, to define a \"3 month\" period one would set the unit as \"month\" and the count as \"3\"."
+              }
+            ]
+          },
+          "count": {
+            "minimum": 1.0,
+            "type": "integer",
+            "description": "The count of units in the period",
+            "contentEncoding": "int32",
+            "xml": {
+              "attribute": true,
+              "wrapped": false
+            }
+          }
+        },
+        "description": "The period of the subscription (at which interval the consumer is being charged)",
+        "xml": {
+          "name": "period",
+          "attribute": false,
+          "wrapped": false
+        },
+        "examples": [
+          "<period count=\"1\">\r\n  <unit>month</unit>\r\n</period>"
+        ]
+      },
+      "QueryChargeRequest": {
+        "title": "QueryChargeRequest",
+        "required": [
+          "country",
+          "merchantId"
+        ],
+        "type": "object",
+        "properties": {
+          "country": {
+            "pattern": "^[A-Z]{2}$",
+            "type": "string",
+            "description": "Country code within which to search for charges"
+          },
+          "merchantId": {
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string",
+            "description": "Boku assigned merchant ID",
+            "xml": {
+              "name": "merchant-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "chargeId": {
+            "maxLength": 24,
+            "minLength": 1,
+            "type": "string",
+            "description": "The charge-id returned from the original charge-response.\nWill match only a single transaction.",
+            "xml": {
+              "name": "charge-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "merchantRequestId": {
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string",
+            "description": "The merchant-request-id of the original charge-request.\nWill match only a single transaction.\n\n**Note:** merchant-request-id is only valid within 24 hours of the original charge request. After this time, it will return no results.",
+            "xml": {
+              "name": "merchant-request-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "merchantTransactionId": {
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string",
+            "description": "Merchant assigned transaction ID supplied in the original charge-request.\nMay match multiple transactions in the case where the merchant reuses merchant-transaction-ids across different request IDs, as Boku does not enforce uniqueness on this value.",
+            "xml": {
+              "name": "merchant-transaction-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          }
+        },
+        "description": "'query-charge' Request",
+        "xml": {
+          "name": "query-charge-request",
+          "attribute": false,
+          "wrapped": false
+        },
+        "examples": [
+          "<query-charge-request>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <country>US</country>\r\n  <merchant-transaction-id>9002005</merchant-transaction-id>\r\n</query-charge-request>"
+        ]
+      },
+      "QueryChargeResponse": {
+        "title": "QueryChargeResponse",
+        "required": [
+          "result"
+        ],
+        "type": "object",
+        "properties": {
+          "result": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Result"
+              },
+              {
+                "description": "The 'result' element is defined in every response type. It is used to convey the outcome of an API request.",
+                "xml": {
+                  "name": "result",
+                  "attribute": false,
+                  "wrapped": false
+                },
+                "examples": [
+                  "<result>\r\n  <reason-code>0</reason-code>\r\n  <message>Operation Successful</message>\r\n  <retriable>false</retriable>\r\n  <status>OK</status>\r\n</result>"
+                ]
+              }
+            ]
+          },
+          "charges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Charge"
+            },
+            "description": "",
+            "xml": {
+              "attribute": false,
+              "wrapped": true
+            }
+          }
+        },
+        "xml": {
+          "name": "query-charge-response",
+          "attribute": false,
+          "wrapped": false
+        },
+        "examples": [
+          "<query-charge-response>\r\n  <result>\r\n    <reason-code>0</reason-code>\r\n    <message>Found 1 result(s)</message>\r\n    <retriable>false</retriable>\r\n    <status>OK</status>\r\n  </result>\r\n  <charges>\r\n    <charges>\r\n      <result>\r\n        <reason-code>0</reason-code>\r\n        <message>Operation successful</message>\r\n        <retriable>false</retriable>\r\n        <status>OK</status>\r\n      </result>\r\n      <charge-status>success</charge-status>\r\n      <charge-id>b368363a00bbddbf794eba33</charge-id>\r\n      <timestamp>2015-02-40 04:44:16</timestamp>\r\n      <merchant-id>gatewaymerchant</merchant-id>\r\n      <merchant-transaction-id>9002005</merchant-transaction-id>\r\n      <country>DE</country>\r\n      <network-id>de-super</network-id>\r\n      <currency>USD</currency>\r\n      <total-amount>5</total-amount>\r\n      <merchant-item-description>Puzzle game</merchant-item-description>\r\n    </charges>\r\n  </charges>\r\n</query-charge-response>"
+        ]
+      },
+      "Result": {
+        "title": "Result",
+        "required": [
+          "status",
+          "reasonCode",
+          "message",
+          "retriable"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ResultStatus"
+              },
+              {
+                "description": "The status of the operation",
+                "xml": {
+                  "attribute": false,
+                  "wrapped": false
+                }
+              }
+            ]
+          },
+          "reasonCode": {
+            "type": "integer",
+            "description": "Provides additional information for the status",
+            "contentEncoding": "int32",
+            "xml": {
+              "name": "reason-code",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "message": {
+            "type": "string",
+            "description": "Description of the reason code"
+          },
+          "retriable": {
+            "type": "boolean",
+            "description": "**true** if the request can be retried; **false** otherwise"
+          },
+          "retryDelay": {
+            "type": "integer",
+            "description": "Minimum milliseconds to delay before re-trying request",
+            "contentEncoding": "int32",
+            "xml": {
+              "name": "retry-delay",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "invalidRequestFields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InvalidRequestField"
+            },
+            "description": "",
+            "xml": {
+              "name": "invalid-request-fields",
+              "attribute": false,
+              "wrapped": true
+            }
+          }
+        },
+        "description": "The 'result' element is defined in every response type. It is used to convey the outcome of an API request.",
+        "xml": {
+          "name": "result",
+          "attribute": false,
+          "wrapped": false
+        },
+        "examples": [
+          "<result>\r\n  <reason-code>0</reason-code>\r\n  <message>Operation Successful</message>\r\n  <retriable>false</retriable>\r\n  <status>OK</status>\r\n</result>"
+        ]
+      },
+      "Reversal": {
+        "title": "Reversal",
+        "required": [
+          "timestamp",
+          "reversalId"
+        ],
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Time original reverse-charge request was received (\"YYYY-MM-DD hh:mm:ss\").\n\nAll timestamps are in UTC."
+          },
+          "reversalId": {
+            "maxLength": 24,
+            "type": "string",
+            "description": "Boku assigned reversal ID allocated at the time of the original reversal request",
+            "xml": {
+              "name": "reversal-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          }
+        },
+        "description": "Contains information about the reversal status of this transaction.\nIf present, charge may be considered reversed. If not present, no reversal request has been received.",
+        "xml": {
+          "name": "reversal",
+          "attribute": false,
+          "wrapped": false
+        },
+        "examples": [
+          "<reversal>\r\n  <timestamp>2015-02-40 04:44:16</timestamp>\r\n  <reversal-id>tRtbIVXyXVIbtRtytRt</reversal-id>\r\n</reversal>"
+        ]
+      },
+      "ReverseChargeRequest": {
+        "title": "ReverseChargeRequest",
+        "required": [
+          "merchantId",
+          "merchantRequestId",
+          "country"
+        ],
+        "type": "object",
+        "properties": {
+          "merchantId": {
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string",
+            "description": "Boku assigned merchant ID",
+            "xml": {
+              "name": "merchant-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "merchantRequestId": {
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string",
+            "description": "Merchant assigned request ID of the original charge-request being reversed",
+            "xml": {
+              "name": "merchant-request-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "country": {
+            "pattern": "^[A-Z]{2}$",
+            "type": "string",
+            "description": "Country code of the original charge to be reversed (same value as the original charge-request)"
+          }
+        },
+        "description": "'reverse-charge' Request - General Parameters",
+        "xml": {
+          "name": "reverse-charge-request",
+          "attribute": false,
+          "wrapped": false
+        },
+        "examples": [
+          "<reverse-charge-request>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-request-id>1002008</merchant-request-id>\r\n  <country>US</country>\r\n</reverse-charge-request>"
+        ]
+      },
+      "ReverseChargeResponse": {
+        "title": "ReverseChargeResponse",
+        "required": [
+          "result",
+          "merchantId",
+          "merchantRequestId",
+          "country"
+        ],
+        "type": "object",
+        "properties": {
+          "result": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Result"
+              },
+              {
+                "description": "The 'result' element is defined in every response type. It is used to convey the outcome of an API request.",
+                "xml": {
+                  "name": "result",
+                  "attribute": false,
+                  "wrapped": false
+                },
+                "examples": [
+                  "<result>\r\n  <reason-code>0</reason-code>\r\n  <message>Operation Successful</message>\r\n  <retriable>false</retriable>\r\n  <status>OK</status>\r\n</result>"
+                ]
+              }
+            ]
+          },
+          "timestamp": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$",
+            "type": "string",
+            "description": "Time request was received (\"YYYY-MM-DD hh:mm:ss\").\n\nAll timestamps are in UTC."
+          },
+          "merchantId": {
+            "maxLength": 50,
+            "type": "string",
+            "description": "Boku assigned merchant ID",
+            "xml": {
+              "name": "merchant-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "merchantRequestId": {
+            "maxLength": 50,
+            "type": "string",
+            "description": "Merchant assigned request ID",
+            "xml": {
+              "name": "merchant-request-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "reversalId": {
+            "maxLength": 24,
+            "type": "string",
+            "description": "Boku assigned reversal ID",
+            "xml": {
+              "name": "reversal-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "country": {
+            "pattern": "^[A-Z]{2}$",
+            "type": "string",
+            "description": "Country code in ISO 3166-1-alpha-2 standard"
+          },
+          "chargeId": {
+            "maxLength": 24,
+            "type": "string",
+            "description": "Unique ID for each charge generated by Boku",
+            "xml": {
+              "name": "charge-id",
+              "attribute": false,
+              "wrapped": false
+            }
+          }
+        },
+        "description": "'reverse-charge' Response - General Elements",
+        "xml": {
+          "name": "reverse-charge-response",
+          "attribute": false,
+          "wrapped": false
+        },
+        "examples": [
+          "<reverse-charge-response>\r\n  <result>\r\n    <reason-code>0</reason-code>\r\n    <message>Operation Successful</message>\r\n    <retriable>false</retriable>\r\n    <status>OK</status>\r\n  </result>\r\n  <timestamp>2015-02-40 04:44:16</timestamp>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-request-id>1002008</merchant-request-id>\r\n  <reversal-id>tRtbIVXyXVIbtRtytRt</reversal-id>\r\n  <country>DE</country>\r\n</reverse-charge-response>"
+        ]
+      },
+      "SellerOfRecord": {
+        "title": "SellerOfRecord",
+        "required": [
+          "id"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "maxLength": 24,
+            "minLength": 1,
+            "type": "string",
+            "description": "ID of seller of record previously registered with Boku. Boku generated Seller of Record id will be 24 character alpha-numeric string."
+          }
+        },
+        "description": "Optin and Charge Request API can be made for specific Seller of Record previously registered with Boku.",
+        "xml": {
+          "name": "seller-of-record",
+          "attribute": false,
+          "wrapped": false
+        },
+        "examples": [
+          "<seller-of-record>\r\n  <id>73tdolramou0m6jnqyb6pkk3</id>\r\n</seller-of-record>"
+        ]
+      },
+      "Settlement": {
+        "title": "Settlement",
+        "required": [
+          "currency",
+          "grossMerchantAmount",
+          "exchangeRate"
+        ],
+        "type": "object",
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "grossMerchantAmount": {
+            "minimum": 0.001,
+            "type": "number",
+            "xml": {
+              "name": "gross-merchant-amount",
+              "attribute": false,
+              "wrapped": false
+            }
+          },
+          "exchangeRate": {
+            "type": "number",
+            "xml": {
+              "name": "exchange-rate",
+              "attribute": false,
+              "wrapped": false
+            }
+          }
+        }
+      },
+      "Subscription": {
+        "title": "Subscription",
+        "required": [
+          "isSubscription"
+        ],
+        "type": "object",
+        "properties": {
+          "isSubscription": {
+            "type": "boolean",
+            "description": "True if the charge is for a subscription, false otherwise",
+            "xml": {
+              "name": "is-subscription",
+              "attribute": true,
+              "wrapped": false
+            }
+          },
+          "period": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Period"
+              },
+              {
+                "description": "The period of the subscription (at which interval the consumer is being charged)",
+                "xml": {
+                  "name": "period",
+                  "attribute": false,
+                  "wrapped": false
+                },
+                "examples": [
+                  "<period count=\"1\">\r\n  <unit>month</unit>\r\n</period>"
+                ]
+              }
+            ]
+          },
+          "renewal": {
+            "type": "boolean",
+            "description": "False if this is the first charge in a subscription, true if the charge is a renewal (second period onwards)"
+          }
+        },
+        "xml": {
+          "name": "subscription",
+          "attribute": false,
+          "wrapped": false
+        },
+        "examples": [
+          "<subscription is-subscription=\"true\">\r\n  <period count=\"1\">\r\n    <unit>month</unit>\r\n  </period>\r\n  <renewal>true</renewal>\r\n</subscription>"
+        ]
+      },
+      "Timeout": {
+        "title": "Timeout",
+        "required": [
+          "after"
+        ],
+        "type": "object",
+        "properties": {
+          "after": {
+            "maximum": 60000.0,
+            "minimum": 0.0,
+            "type": "integer",
+            "description": "Maximum time to block before returning a response, in milliseconds. The value `0` means do not block, and there is no way to specify infinity.",
+            "contentEncoding": "int64",
+            "xml": {
+              "attribute": true,
+              "wrapped": false
+            }
+          }
+        },
+        "description": "Specifies how long to block waiting for a response",
+        "xml": {
+          "name": "timeout",
+          "attribute": false,
+          "wrapped": false
+        },
+        "examples": [
+          "<timeout after=\"10000\" />"
+        ]
+      },
+      "PeriodUnit": {
+        "title": "PeriodUnit",
+        "enum": [
+          "day",
+          "week",
+          "month",
+          "year"
+        ],
+        "type": "string",
+        "description": "A period is comprised of a unit of time (day, week, month, year) and a count (how many units per period).\n\nFor example, to define a \"3 month\" period one would set the unit as \"month\" and the count as \"3\"."
+      },
+      "ChargeStatus": {
+        "title": "ChargeStatus",
+        "enum": [
+          "success",
+          "failed",
+          "in-progress"
+        ],
+        "type": "string",
+        "description": "Status of the charge at the time this response was returned.\n\nIf 'in-progress' is returned, the charge call should be re-issued with the same request ID until a final status is reached.\nIf null, means no charge was created, e.g. because the request was rejected.",
+        "xml": {
+          "name": "charge-status",
+          "attribute": false,
+          "wrapped": false
+        }
+      },
+      "ResultStatus": {
+        "title": "ResultStatus",
+        "enum": [
+          "OK",
+          "ERROR"
+        ],
+        "type": "string",
+        "description": "The status of the operation",
+        "xml": {
+          "attribute": false,
+          "wrapped": false
+        }
+      },
+      "Content-Type": {
+        "title": "Content-Type",
+        "const": "application/xml",
+        "type": "string"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Charge",
+      "description": "The 'charge' method submit charges to the associated consumer account that is registered with the merchant. The 'query-charge' method can be used in cases when the result of a prior charge is unknown. The 'reverse-charge' method can be used in cases when the result of a prior charge is unknown.\n\n#### Charge (synchronous)\n\n| Step | Description | API |\n|------|-------------|-----|\n| 1 | Merchant sends request to Boku to charge the consumer for a purchase using their registered payment method | 'charge' API method |\n| 2 | Boku responds with success or failure | |\n\n#### Charge (asynchronous)\n\n| Step | Description | API |\n|------|-------------|-----|\n| 1 | Merchant sends the request to Boku to cancel a previously collected opt-in. Remove a payment method. | 'charge' API method |\n| 2 | Boku responds with pending transaction status | |\n| 3 | Merchant repeatedly polls until the purchase completes | |\n| 4| Boku responds with success or failure | |\n\n#### Reverse Charge\n\n| Step | Description | API |\n|------|-------------|-----|\n| 1 | Merchant sends request to Boku to reverse a charge. Typically used when a merchant does not receive a response for a charge request | 'reverse-charge' API method |\n| 2 | Boku responds with success or failure | |\n\n#### Handling charge timeouts and network errors\n\nIn situations where the outcome of a `charge` call is uncertain to the merchant, the merchant must take action to resolve the final state of the charge.\n\nThese situations include timeouts where a well-formed in-progress response was sent to the merchant (reason code 23), a well-formed internal error response (reason code 35), a malformed response or unexpected HTTP error, as well as network errors such as connection-reset or socket-timeout where Boku may not have even received the original request at all.\n\nThe API provides several different ways to do this depending on how the merchant wishes to proceed with the charge:\n\n  1. Give up and reverse the charge, regardless of whether it succeeded, failed, or is still in progress.\n      * Issue a reverse-charge-request with the same merchant-request-id as was used for the charge-request.\n  2. Continue to try and proceed with the charge, even if Boku never received the original request.\n      * Send another charge-request identical to the first charge request. (Charge API is idempotent.)\n  3. Check on the status of the charge, but do not start a new one if it is not processing already.\n      * Poll the current status of the charge by sending a query-charge-request with the merchant-request-id used in the original charge-request.\n\n### API idempotency and duplicate or retried requests\n\nAll API calls that can modify state or have side-effects are idempotent based on the `merchant-request-id` field during the idempotency window, which is 24 hours.\n\nThis means that any request received by Boku that has the same `merchant-request-id` to a prior request and has the same field values as that prior request, will either return a logically equivalent response to the previous response or in cases where the previous response was incomplete or indeterminate may return the current known state of the requested operation.\n\nThis feature exists to ensure accidental duplicate actions are not executed and to provide a general solution for retries in case of indeterminate outcomes.\n\nIt does ultimately rely on an appropriate merchant-request-id generation strategy to be useful, though, so merchants need to take great care in how they generate and supply those IDs.\n\n#### Idempotency examples\n\nHere are some examples using charge calls to illustrate this behavior:\n\n* A charge request results in success, and then a duplicate charge request is received:\n    * The second request receives the same success response as the first, and no new transaction is created.\n* A charge request results in a billing error, such as insufficient funds, and then a duplicate charge request is received:\n    * The second request receives the same error response as the first, and no new transaction is created.\n* A charge request takes longer than the given `timeout` parameter and returns in-progress status (23), and then a duplicate charge request is received:\n    * If the charge is still incomplete, will return the same in-progress status as last time.\n    * If the charge has completed since the first response was returned, will return the final status of the charge (success or fail). This final status response will be identical to if the charge had completed within the timeout in the first place.\n* A charge request resulted in an internal error and the processing state was indeterminate, so internal-error status (35) was returned, and then a duplicate charge request is received:\n    * If the internal error occurred before the charge was recorded, no processing has occurred and so a new charge will be initiated by the second request.\n    * If the internal error occurred after the charge was recorded, then the current status of the charge initiated in the first request will be returned.\n    * If an internal error is experienced again, internal-error (35) will be returned.\n\n#### On the idempotency window\n\nThe idempotency window is 24 hours, which means idempotency only applies for 24 hours after the last request was received with a given `merchant-request-id`.\n\nIf a request is re-issued for the first time over 24 hours after the original request was received it will be treated as a brand new request, and be entirely independent of the first request.\n\nThe 24-hour window is a sliding window based on the last usage of a particular `merchant-request-id`. Thus, for potentially long-running operations, requests may be repeatedly reissued for as long as necessary, as long as the gap between two requests never exceeds 24 hours.\n\n#### On request conflicts\n\nIdempotency applies only for duplicate requests on the basis of `merchant-request-id` that are logically equivalent. If a request is received with the same `merchant-request-id` and is not equivalent to the previous request then it will be rejected with error 124 \"Idempotent request ID conflict\".\n\nExamples of conflicting are things such as using the same request ID for a request of a different type or issuing a duplicate charge request with a differing amount or user account.\n"
+    }
+  ]
+}

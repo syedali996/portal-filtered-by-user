@@ -1,0 +1,1089 @@
+{
+  "swaggerVersion": "1.2",
+  "basePath": "https://jp-api4-stage.boku.com",
+  "resourcePath": "/",
+  "apis": [
+    {
+      "path": "/billing/3.0/charge",
+      "operations": [
+        {
+          "method": "POST",
+          "summary": "The 'charge' request processes a payment against a previously authorized opt-in. The 'optin-id' received in the 'optin'/'confirm-optin' response must be supplied in order to validate the consumer payment method.\n\nIf the 'optin-id' and the other parameters of the request are valid, the charge is submitted to the issuer for processing. A 'charge-id' is returned in the API response.\n\n'Charge' may operate as a synchronous request, fully asynchronous, or synchronous with fallback to asynchronous after a timeout. The timeout is supplied with the request, or can default to a value configurable for the merchant. The 'charge' method returns a unique 'charge-id' in all cases where the request has been accepted for processing, including success, failure, and pending cases.\n\nThe 'charge' method is idempotent. If the same request is sent again (with the same 'merchant-request-id'), Boku will return the current status of the transaction. For example:\n\n* If the transaction has completed successfully, a response code of \"0\" will be returned.\n* If the transaction has completed with a billing error, a response code of \"107\" will be   returned",
+          "nickname": "charge",
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "description": "",
+              "paramType": "header",
+              "required": true,
+              "allowMultiple": false,
+              "defaultValue": "",
+              "enum": [
+                "application/xml"
+              ],
+              "uniqueItems": false,
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "description": "",
+              "paramType": "body",
+              "required": true,
+              "allowMultiple": false,
+              "defaultValue": "",
+              "uniqueItems": false,
+              "type": "ChargeRequest"
+            }
+          ],
+          "produces": [
+            "application/xml"
+          ],
+          "consumes": [
+            "application/xml"
+          ],
+          "responseMessages": [],
+          "uniqueItems": false,
+          "$ref": "ChargeResponse"
+        }
+      ]
+    },
+    {
+      "path": "/billing/3.0/query-charge",
+      "operations": [
+        {
+          "method": "POST",
+          "summary": "Retrieves the status and all details of prior charges matching the given request criteria.\n\nEach returned charge element is similar to a charge-response: although some elements are missing, all present elements have the same names, format and meaning as those in the original charge-response.\n\nThe query-charge API call is guaranteed to return transactions up to 1 year old. If the transaction was created before that period, this API may return no results.\n\nCriteria are evaluated in an AND fashion, i.e. if more than one field is supplied then all will be used to filter the returned charge elements. In normal usage this is not relevant, since you would only supply one of the three fields by itself.",
+          "nickname": "queryCharge",
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "description": "",
+              "paramType": "header",
+              "required": true,
+              "allowMultiple": false,
+              "defaultValue": "",
+              "enum": [
+                "application/xml"
+              ],
+              "uniqueItems": false,
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "description": "",
+              "paramType": "body",
+              "required": true,
+              "allowMultiple": false,
+              "defaultValue": "",
+              "uniqueItems": false,
+              "type": "QueryChargeRequest"
+            }
+          ],
+          "produces": [
+            "application/xml"
+          ],
+          "consumes": [
+            "application/xml"
+          ],
+          "responseMessages": [],
+          "uniqueItems": false,
+          "$ref": "QueryChargeResponse"
+        }
+      ]
+    },
+    {
+      "path": "/billing/3.0/reverse-charge",
+      "operations": [
+        {
+          "method": "POST",
+          "summary": "Reverses a charge request. This method is typically used when the result of a prior charge request is unknown. This can occur for a number of reasons, including:\n\n* Network issue\n* Request timed out by merchant\n* Response received but could not be recorded\n\n* A reversal will be accepted and a status of \"OK\" returned in almost all cases, regardless   of whether Boku actually received the original charge.\n\nAside from general request validation errors, a reversal will only be rejected if the original charge request was issued over 1 hour previously. After the 1 hour time period has expired, reversals are no longer allowed - please refund the transaction if required.",
+          "nickname": "reverseCharge",
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "description": "",
+              "paramType": "header",
+              "required": true,
+              "allowMultiple": false,
+              "defaultValue": "",
+              "enum": [
+                "application/xml"
+              ],
+              "uniqueItems": false,
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "description": "",
+              "paramType": "body",
+              "required": true,
+              "allowMultiple": false,
+              "defaultValue": "",
+              "uniqueItems": false,
+              "type": "ReverseChargeRequest"
+            }
+          ],
+          "produces": [
+            "application/xml"
+          ],
+          "consumes": [
+            "application/xml"
+          ],
+          "responseMessages": [],
+          "uniqueItems": false,
+          "$ref": "ReverseChargeResponse"
+        }
+      ]
+    },
+    {
+      "path": "/billing/3.0/begin-single-charge",
+      "operations": [
+        {
+          "method": "POST",
+          "summary": "The purpose of the 'begin-single-charge' API call is to initiate a one time charge. The 'begin-single-charge' call initiates a process in which a consumer is required to authenticate themselves each time a purchase is requested. This API provides a payment option for consumers who choose not to save a payment method with the merchant.\n\nThe Merchant can obtain information on the status of the charge made through the 'begin-single-charge' API in the following ways\n\n* 'query-charge' API\n* notification to a Merchant's notification URL specified in the 'begin-single-charge' request",
+          "nickname": "beginSingleCharge",
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "description": "",
+              "paramType": "header",
+              "required": true,
+              "allowMultiple": false,
+              "defaultValue": "",
+              "enum": [
+                "application/xml"
+              ],
+              "uniqueItems": false,
+              "type": "string"
+            },
+            {
+              "name": "body",
+              "description": "",
+              "paramType": "body",
+              "required": true,
+              "allowMultiple": false,
+              "defaultValue": "",
+              "uniqueItems": false,
+              "type": "BeginSingleChargeRequest"
+            }
+          ],
+          "produces": [
+            "application/xml"
+          ],
+          "consumes": [
+            "application/xml"
+          ],
+          "responseMessages": [],
+          "uniqueItems": false,
+          "$ref": "BeginSingleChargeResponse"
+        }
+      ]
+    }
+  ],
+  "models": {
+    "BeginSingleChargeRequest": {
+      "id": "BeginSingleChargeRequest",
+      "description": "'begin-single-charge' Request - General Parameters",
+      "required": [
+        "country",
+        "merchantId",
+        "merchantRequestId",
+        "merchantItemDescription",
+        "currency",
+        "totalAmount",
+        "paymentMethod",
+        "chargeType",
+        "hosted"
+      ],
+      "properties": {
+        "country": {
+          "description": "Country code in ISO 3166-1-alpha-2 standard",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "merchantId": {
+          "description": "Boku assigned merchant ID",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "merchantRequestId": {
+          "description": "Unique merchant assigned request ID\n\nMultiple requests received with the same request ID in this field will be handled idempotently within the idempotency window.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "merchantTransactionId": {
+          "description": "Merchant assigned transaction ID",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "merchantData": {
+          "description": "Merchant supplied meta data. This meta data is returned in the 'begin-single-charge' response and can be available in merchant reports.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "merchantItemDescription": {
+          "description": "A purchase description of the item.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "merchantConsumerId": {
+          "description": "Consumer id assigned by the merchant",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "currency": {
+          "description": "ISO 4217 3 letter currency code.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "totalAmount": {
+          "description": "Total amount to charge, including tax",
+          "defaultValue": "",
+          "minimum": "0.001",
+          "maximum": "",
+          "uniqueItems": false,
+          "type": "number",
+          "format": "double"
+        },
+        "timeout": {
+          "description": "Specifies how long to block waiting for a response",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "$ref": "Timeout"
+        },
+        "consumerIpAddress": {
+          "description": "The IP address of the consumer. Must be IPv4 address.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "paymentMethod": {
+          "description": "The payment method the consumer has selected.\n\nEach wallet provider will be its own payment method. A list of available values will be provided on demand.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "chargeType": {
+          "description": "Type of charge",
+          "defaultValue": "hosted",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "notificationUrl": {
+          "description": "Supplies the URL for Boku to send a notification once the charge is complete",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "hosted": {
+          "description": "",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "$ref": "BeginSingleChargeRequestHosted"
+        },
+        "sellerOfRecord": {
+          "description": "Optin and Charge Request API can be made for specific Seller of Record previously registered with Boku.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "$ref": "SellerOfRecord"
+        }
+      }
+    },
+    "BeginSingleChargeRequestHosted": {
+      "id": "BeginSingleChargeRequestHosted",
+      "required": [
+        "forwardUrl"
+      ],
+      "properties": {
+        "forwardUrl": {
+          "description": "Supplies the URL for Boku to redirect the consumer back to the merchant UI to complete authentication.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "useMobileFlow": {
+          "description": "True if a mobile-optimized purchase flow should be used for this request, false otherwise.\n\nExample: A non-mobile-optimized flow could display a QR code on the user's mobile. The user would be unable to scan the QR code because they are already on their mobile.\n\nA mobile-optimized flow could display a mobile login page to the user.",
+          "defaultValue": "false",
+          "uniqueItems": false,
+          "type": "boolean"
+        }
+      }
+    },
+    "BeginSingleChargeResponse": {
+      "id": "BeginSingleChargeResponse",
+      "required": [
+        "result",
+        "merchantId",
+        "merchantRequestId",
+        "paymentMethod"
+      ],
+      "properties": {
+        "result": {
+          "description": "The 'result' element is defined in every response type. It is used to convey the outcome of an API request.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "$ref": "Result"
+        },
+        "timestamp": {
+          "description": "Time request was received (\"YYYY-MM-DD hh:mm:ss\").\n\nAll timestamps are in UTC.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "merchantId": {
+          "description": "Boku assigned merchant ID",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "merchantRequestId": {
+          "description": "Merchant assigned unique request ID",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "merchantTransactionId": {
+          "description": "Merchant assigned transaction ID",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "merchantData": {
+          "description": "Merchant supplied metadata",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "chargeId": {
+          "description": "Unique ID for each charge generated by Boku.\nIf null, means no charge was created, e.g. because the request was rejected.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "chargeStatus": {
+          "description": "Status of the charge at the time this response was returned.\n\nIf 'in-progress' is returned, the charge call should be re-issued with the same request ID until a final status is reached.\nIf null, means no charge was created, e.g. because the request was rejected.",
+          "defaultValue": "",
+          "enum": [
+            "success",
+            "failed",
+            "in-progress"
+          ],
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "country": {
+          "description": "Country code in ISO 3166-1-alpha-2 standard",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "paymentMethod": {
+          "description": "The payment method selected",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "hosted": {
+          "description": "",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "$ref": "BeginSingleChargeResponseHosted"
+        },
+        "sellerOfRecord": {
+          "description": "Optin and Charge Request API can be made for specific Seller of Record previously registered with Boku.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "$ref": "SellerOfRecord"
+        }
+      }
+    },
+    "BeginSingleChargeResponseHosted": {
+      "id": "BeginSingleChargeResponseHosted",
+      "required": [
+        "redirectUrl"
+      ],
+      "properties": {
+        "redirectUrl": {
+          "description": "URL, where the user should be redirected to so the charge, can be authorized",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        }
+      }
+    },
+    "Charge": {
+      "id": "Charge",
+      "required": [
+        "result",
+        "chargeStatus",
+        "chargeId",
+        "timestamp",
+        "merchantId",
+        "country",
+        "networkId",
+        "currency",
+        "totalAmount",
+        "merchantItemDescription"
+      ],
+      "properties": {
+        "result": {
+          "description": "The 'result' element is defined in every response type. It is used to convey the outcome of an API request.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "$ref": "Result"
+        },
+        "chargeStatus": {
+          "description": "Status of the charge at the time this response was returned.\n\nIf 'in-progress' is returned, the charge call should be re-issued with the same request ID until a final status is reached.\nIf null, means no charge was created, e.g. because the request was rejected.",
+          "defaultValue": "",
+          "enum": [
+            "success",
+            "failed",
+            "in-progress"
+          ],
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "chargeId": {
+          "description": "Unique ID for the charge generated by Boku.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Time original charge request was received (\"YYYY-MM-DD hh:mm:ss\").\n\nAll timestamps are in UTC.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "merchantId": {
+          "description": "Boku assigned merchant ID",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "merchantTransactionId": {
+          "description": "Merchant assigned transaction ID",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "country": {
+          "description": "Country code in ISO 3166-1-alpha-2 standard",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "networkId": {
+          "description": "Issuer's Network ID",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "currency": {
+          "description": "ISO 4217 3 letter currency code.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "totalAmount": {
+          "description": "Total amount charged or attempted to charge, including tax",
+          "defaultValue": "",
+          "minimum": "0.001",
+          "maximum": "",
+          "uniqueItems": false,
+          "type": "number",
+          "format": "double"
+        },
+        "merchantItemDescription": {
+          "description": "A short purchase description that appears on the consumer bill.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "reversal": {
+          "description": "Contains information about the reversal status of this transaction.\nIf present, charge may be considered reversed. If not present, no reversal request has been received.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "$ref": "Reversal"
+        },
+        "merchantData": {
+          "description": "Merchant supplied meta data",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        }
+      }
+    },
+    "ChargeRequest": {
+      "id": "ChargeRequest",
+      "description": "'charge' Request - General Parameters",
+      "required": [
+        "merchantId",
+        "merchantRequestId",
+        "merchantItemDescription",
+        "optinId",
+        "currency",
+        "totalAmount"
+      ],
+      "properties": {
+        "merchantId": {
+          "description": "Boku assigned merchant ID",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "merchantRequestId": {
+          "description": "Unique merchant assigned request ID\n\nMultiple requests received with the same request ID in this field will be handled idempotently within the idempotency window.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "merchantTransactionId": {
+          "description": "Merchant assigned transaction ID",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "merchantData": {
+          "description": "Merchant supplied meta data. This meta data is returned in the 'charge' response and can be available in merchant reports.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "merchantItemDescription": {
+          "description": "A short purchase description that appears on the consumer bill. A string longer than 20 characters will be truncated.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "optinId": {
+          "description": "Boku assigned consumer opt-in ID",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "currency": {
+          "description": "ISO 4217 3 letter currency code.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "totalAmount": {
+          "description": "Total amount to charge, including tax",
+          "defaultValue": "",
+          "minimum": "0.001",
+          "maximum": "",
+          "uniqueItems": false,
+          "type": "number",
+          "format": "double"
+        },
+        "timeout": {
+          "description": "Specifies how long to block waiting for a response",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "$ref": "Timeout"
+        },
+        "consumerIpAddress": {
+          "description": "IP address of consumer. Must be IPv4 address.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "subscription": {
+          "description": "",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "$ref": "Subscription"
+        },
+        "sellerOfRecord": {
+          "description": "Optin and Charge Request API can be made for specific Seller of Record previously registered with Boku.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "$ref": "SellerOfRecord"
+        }
+      }
+    },
+    "ChargeResponse": {
+      "id": "ChargeResponse",
+      "description": "'charge' Response - General Elements",
+      "required": [
+        "result",
+        "merchantId",
+        "merchantRequestId",
+        "optinId"
+      ],
+      "properties": {
+        "result": {
+          "description": "The 'result' element is defined in every response type. It is used to convey the outcome of an API request.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "$ref": "Result"
+        },
+        "timestamp": {
+          "description": "Time request was received (\"YYYY-MM-DD hh:mm:ss\").\n\nAll timestamps are in UTC",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "merchantId": {
+          "description": "Boku assigned merchant ID",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "merchantRequestId": {
+          "description": "Merchant assigned unique request ID",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "merchantTransactionId": {
+          "description": "Merchant assigned transaction ID",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "merchantData": {
+          "description": "Merchant supplied meta data",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "optinId": {
+          "description": "Boku assigned consumer opt-in ID",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "chargeId": {
+          "description": "Unique ID for each charge generated by Boku.\nIf null, means no charge was created, e.g. because the request was rejected.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "chargeStatus": {
+          "description": "Status of the charge at the time this response was returned.\n\nIf 'in-progress' is returned, the charge call should be re-issued with the same request ID until a final status is reached.\nIf null, means no charge was created, e.g. because the request was rejected.",
+          "defaultValue": "",
+          "enum": [
+            "success",
+            "failed",
+            "in-progress"
+          ],
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "country": {
+          "description": "Country code in ISO 3166-1-alpha-2 standard",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "networkId": {
+          "description": "Issuer's Network ID",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "sellerOfRecord": {
+          "description": "Optin and Charge Request API can be made for specific Seller of Record previously registered with Boku.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "$ref": "SellerOfRecord"
+        },
+        "settlement": {
+          "description": "",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "$ref": "Settlement"
+        }
+      }
+    },
+    "InvalidRequestField": {
+      "id": "InvalidRequestField",
+      "description": "Provides per-field error information in the case where the submitted request did not satisfy validation constraints.",
+      "required": [],
+      "properties": {
+        "path": {
+          "description": "Property path of the field that was in error. The element or attribute name is given in camel-case, with nested objects delimited by `.` (period)\n\nIf there are multiple distinct errors regarding a particular field, it may appear more than once. I.e. `field[path]` is not necessarily unique.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "reason": {
+          "description": "A descriptive reason why the field was invalid. This message is not localized and so is not appropriate for user messaging.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        }
+      }
+    },
+    "Period": {
+      "id": "Period",
+      "description": "The period of the subscription (at which interval the consumer is being charged)",
+      "required": [
+        "unit",
+        "count"
+      ],
+      "properties": {
+        "unit": {
+          "description": "A period is comprised of a unit of time (day, week, month, year) and a count (how many units per period).\n\nFor example, to define a \"3 month\" period one would set the unit as \"month\" and the count as \"3\".",
+          "defaultValue": "",
+          "enum": [
+            "day",
+            "week",
+            "month",
+            "year"
+          ],
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "count": {
+          "description": "The count of units in the period",
+          "defaultValue": "",
+          "minimum": "1",
+          "maximum": "",
+          "uniqueItems": false,
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "QueryChargeRequest": {
+      "id": "QueryChargeRequest",
+      "description": "'query-charge' Request",
+      "required": [
+        "country",
+        "merchantId"
+      ],
+      "properties": {
+        "country": {
+          "description": "Country code within which to search for charges",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "merchantId": {
+          "description": "Boku assigned merchant ID",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "chargeId": {
+          "description": "The charge-id returned from the original charge-response.\nWill match only a single transaction.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "merchantRequestId": {
+          "description": "The merchant-request-id of the original charge-request.\nWill match only a single transaction.\n\n**Note:** merchant-request-id is only valid within 24 hours of the original charge request. After this time, it will return no results.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "merchantTransactionId": {
+          "description": "Merchant assigned transaction ID supplied in the original charge-request.\nMay match multiple transactions in the case where the merchant reuses merchant-transaction-ids across different request IDs, as Boku does not enforce uniqueness on this value.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        }
+      }
+    },
+    "QueryChargeResponse": {
+      "id": "QueryChargeResponse",
+      "required": [
+        "result"
+      ],
+      "properties": {
+        "result": {
+          "description": "The 'result' element is defined in every response type. It is used to convey the outcome of an API request.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "$ref": "Result"
+        },
+        "charges": {
+          "description": "",
+          "items": {
+            "$ref": "Charge"
+          },
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "array"
+        }
+      }
+    },
+    "Result": {
+      "id": "Result",
+      "description": "The 'result' element is defined in every response type. It is used to convey the outcome of an API request.",
+      "required": [
+        "status",
+        "reasonCode",
+        "message",
+        "retriable"
+      ],
+      "properties": {
+        "status": {
+          "description": "The status of the operation",
+          "defaultValue": "",
+          "enum": [
+            "OK",
+            "ERROR"
+          ],
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "reasonCode": {
+          "description": "Provides additional information for the status",
+          "defaultValue": "",
+          "minimum": "",
+          "maximum": "",
+          "uniqueItems": false,
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "description": "Description of the reason code",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "retriable": {
+          "description": "**true** if the request can be retried; **false** otherwise",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "boolean"
+        },
+        "retryDelay": {
+          "description": "Minimum milliseconds to delay before re-trying request",
+          "defaultValue": "",
+          "minimum": "",
+          "maximum": "",
+          "uniqueItems": false,
+          "type": "integer",
+          "format": "int32"
+        },
+        "invalidRequestFields": {
+          "description": "",
+          "items": {
+            "$ref": "InvalidRequestField"
+          },
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "array"
+        }
+      }
+    },
+    "Reversal": {
+      "id": "Reversal",
+      "description": "Contains information about the reversal status of this transaction.\nIf present, charge may be considered reversed. If not present, no reversal request has been received.",
+      "required": [
+        "timestamp",
+        "reversalId"
+      ],
+      "properties": {
+        "timestamp": {
+          "description": "Time original reverse-charge request was received (\"YYYY-MM-DD hh:mm:ss\").\n\nAll timestamps are in UTC.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "reversalId": {
+          "description": "Boku assigned reversal ID allocated at the time of the original reversal request",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        }
+      }
+    },
+    "ReverseChargeRequest": {
+      "id": "ReverseChargeRequest",
+      "description": "'reverse-charge' Request - General Parameters",
+      "required": [
+        "merchantId",
+        "merchantRequestId",
+        "country"
+      ],
+      "properties": {
+        "merchantId": {
+          "description": "Boku assigned merchant ID",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "merchantRequestId": {
+          "description": "Merchant assigned request ID of the original charge-request being reversed",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "country": {
+          "description": "Country code of the original charge to be reversed (same value as the original charge-request)",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        }
+      }
+    },
+    "ReverseChargeResponse": {
+      "id": "ReverseChargeResponse",
+      "description": "'reverse-charge' Response - General Elements",
+      "required": [
+        "result",
+        "merchantId",
+        "merchantRequestId",
+        "country"
+      ],
+      "properties": {
+        "result": {
+          "description": "The 'result' element is defined in every response type. It is used to convey the outcome of an API request.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "$ref": "Result"
+        },
+        "timestamp": {
+          "description": "Time request was received (\"YYYY-MM-DD hh:mm:ss\").\n\nAll timestamps are in UTC.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "merchantId": {
+          "description": "Boku assigned merchant ID",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "merchantRequestId": {
+          "description": "Merchant assigned request ID",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "reversalId": {
+          "description": "Boku assigned reversal ID",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "country": {
+          "description": "Country code in ISO 3166-1-alpha-2 standard",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "chargeId": {
+          "description": "Unique ID for each charge generated by Boku",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        }
+      }
+    },
+    "SellerOfRecord": {
+      "id": "SellerOfRecord",
+      "description": "Optin and Charge Request API can be made for specific Seller of Record previously registered with Boku.",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "description": "ID of seller of record previously registered with Boku. Boku generated Seller of Record id will be 24 character alpha-numeric string.",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        }
+      }
+    },
+    "Settlement": {
+      "id": "Settlement",
+      "required": [
+        "currency",
+        "grossMerchantAmount",
+        "exchangeRate"
+      ],
+      "properties": {
+        "currency": {
+          "description": "",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "string"
+        },
+        "grossMerchantAmount": {
+          "description": "",
+          "defaultValue": "",
+          "minimum": "0.001",
+          "maximum": "",
+          "uniqueItems": false,
+          "type": "number",
+          "format": "double"
+        },
+        "exchangeRate": {
+          "description": "",
+          "defaultValue": "",
+          "minimum": "",
+          "maximum": "",
+          "uniqueItems": false,
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "Subscription": {
+      "id": "Subscription",
+      "required": [
+        "isSubscription"
+      ],
+      "properties": {
+        "isSubscription": {
+          "description": "True if the charge is for a subscription, false otherwise",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "boolean"
+        },
+        "period": {
+          "description": "The period of the subscription (at which interval the consumer is being charged)",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "$ref": "Period"
+        },
+        "renewal": {
+          "description": "False if this is the first charge in a subscription, true if the charge is a renewal (second period onwards)",
+          "defaultValue": "",
+          "uniqueItems": false,
+          "type": "boolean"
+        }
+      }
+    },
+    "Timeout": {
+      "id": "Timeout",
+      "description": "Specifies how long to block waiting for a response",
+      "required": [
+        "after"
+      ],
+      "properties": {
+        "after": {
+          "description": "Maximum time to block before returning a response, in milliseconds. The value `0` means do not block, and there is no way to specify infinity.",
+          "defaultValue": "",
+          "minimum": "0",
+          "maximum": "60000",
+          "uniqueItems": false,
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    }
+  },
+  "authorizations": {},
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ]
+}

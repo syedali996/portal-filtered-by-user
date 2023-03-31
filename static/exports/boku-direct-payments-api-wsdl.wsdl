@@ -1,0 +1,1314 @@
+<?xml version="1.0" encoding="utf-8"?>
+<definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:schemas="https://jp-api4-stage.boku.com/schemas" xmlns:wsdl="https://jp-api4-stage.boku.com/wsdl" targetNamespace="https://jp-api4-stage.boku.com/wsdl" xmlns="http://schemas.xmlsoap.org/wsdl/">
+  <types>
+    <xs:schema xmlns:tns="https://jp-api4-stage.boku.com/schemas" targetNamespace="https://jp-api4-stage.boku.com/schemas" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+      <xs:element name="POST_charge_InputMessage" type="schemas:POST_charge_InputMessage" />
+      <xs:element name="POST_charge_OutputMessage" type="schemas:POST_charge_OutputMessage" />
+      <xs:element name="POST_queryCharge_InputMessage" type="schemas:POST_queryCharge_InputMessage" />
+      <xs:element name="POST_queryCharge_OutputMessage" type="schemas:POST_queryCharge_OutputMessage" />
+      <xs:element name="POST_reverseCharge_InputMessage" type="schemas:POST_reverseCharge_InputMessage" />
+      <xs:element name="POST_reverseCharge_OutputMessage" type="schemas:POST_reverseCharge_OutputMessage" />
+      <xs:element name="POST_beginSingleCharge_InputMessage" type="schemas:POST_beginSingleCharge_InputMessage" />
+      <xs:element name="POST_beginSingleCharge_OutputMessage" type="schemas:POST_beginSingleCharge_OutputMessage" />
+      <xs:complexType name="begin-single-charge-request">
+        <xs:annotation>
+          <xs:documentation>'begin-single-charge' Request - General Parameters</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+          <xs:element minOccurs="1" name="country">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Country code in ISO 3166-1-alpha-2 standard</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:pattern value="^[A-Z]{2}$" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="merchant-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Boku assigned merchant ID</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="50" />
+                <xs:minLength value="1" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="merchant-request-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Unique merchant assigned request ID
+
+Multiple requests received with the same request ID in this field will be handled idempotently within the idempotency window.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="50" />
+                <xs:minLength value="1" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="0" name="merchant-transaction-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Merchant assigned transaction ID</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="50" />
+                <xs:minLength value="1" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="0" name="merchant-data">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Merchant supplied meta data. This meta data is returned in the 'begin-single-charge' response and can be available in merchant reports.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="255" />
+                <xs:minLength value="0" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="merchant-item-description">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>A purchase description of the item.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="255" />
+                <xs:minLength value="1" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="0" name="merchant-consumer-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Consumer id assigned by the merchant</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="64" />
+                <xs:minLength value="1" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="currency">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>ISO 4217 3 letter currency code.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:pattern value="^[A-Z]{3}$" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="total-amount">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Total amount to charge, including tax</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:double">
+                <xs:minInclusive value="0.001" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="0" name="timeout" type="schemas:timeout">
+            <xs:annotation>
+              <xs:documentation>Specifies how long to block waiting for a response</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="0" name="consumer-ip-address">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>The IP address of the consumer. Must be IPv4 address.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="20" />
+                <xs:minLength value="1" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="payment-method">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>The payment method the consumer has selected.
+
+Each wallet provider will be its own payment method. A list of available values will be provided on demand.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="50" />
+                <xs:minLength value="1" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" fixed="hosted" name="charge-type" type="xs:string">
+            <xs:annotation>
+              <xs:documentation>Type of charge</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="0" name="notification-url">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Supplies the URL for Boku to send a notification once the charge is complete</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="255" />
+                <xs:minLength value="1" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="hosted" type="schemas:hosted" />
+          <xs:element minOccurs="0" name="seller-of-record" type="schemas:seller-of-record">
+            <xs:annotation>
+              <xs:documentation>Optin and Charge Request API can be made for specific Seller of Record previously registered with Boku.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="hosted">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="forward-url">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Supplies the URL for Boku to redirect the consumer back to the merchant UI to complete authentication.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="2048" />
+                <xs:minLength value="1" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="0" default="false" name="use-mobile-flow" type="xs:boolean">
+            <xs:annotation>
+              <xs:documentation>True if a mobile-optimized purchase flow should be used for this request, false otherwise.
+
+Example: A non-mobile-optimized flow could display a QR code on the user's mobile. The user would be unable to scan the QR code because they are already on their mobile.
+
+A mobile-optimized flow could display a mobile login page to the user.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="begin-single-charge-response">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="result" type="schemas:result">
+            <xs:annotation>
+              <xs:documentation>The 'result' element is defined in every response type. It is used to convey the outcome of an API request.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="0" name="timestamp">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Time request was received ("YYYY-MM-DD hh:mm:ss").
+
+All timestamps are in UTC.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:pattern value="^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="merchant-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Boku assigned merchant ID</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="50" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="merchant-request-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Merchant assigned unique request ID</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="50" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="0" name="merchant-transaction-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Merchant assigned transaction ID</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="128" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="0" name="merchant-data" type="xs:string">
+            <xs:annotation>
+              <xs:documentation>Merchant supplied metadata</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="0" name="charge-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Unique ID for each charge generated by Boku.
+If null, means no charge was created, e.g. because the request was rejected.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="24" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="0" name="charge-status" type="schemas:charge-status">
+            <xs:annotation>
+              <xs:documentation>Status of the charge at the time this response was returned.
+
+If 'in-progress' is returned, the charge call should be re-issued with the same request ID until a final status is reached.
+If null, means no charge was created, e.g. because the request was rejected.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="0" name="country">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Country code in ISO 3166-1-alpha-2 standard</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:pattern value="^[A-Z]{2}$" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="payment-method">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>The payment method selected</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="50" />
+                <xs:minLength value="1" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="0" name="hosted" type="schemas:hosted1" />
+          <xs:element minOccurs="0" name="seller-of-record" type="schemas:seller-of-record">
+            <xs:annotation>
+              <xs:documentation>Optin and Charge Request API can be made for specific Seller of Record previously registered with Boku.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="hosted1">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="redirect-url">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>URL, where the user should be redirected to so the charge, can be authorized</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="2048" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="charge">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="result" type="schemas:result">
+            <xs:annotation>
+              <xs:documentation>The 'result' element is defined in every response type. It is used to convey the outcome of an API request.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="1" name="charge-status" type="schemas:charge-status">
+            <xs:annotation>
+              <xs:documentation>Status of the charge at the time this response was returned.
+
+If 'in-progress' is returned, the charge call should be re-issued with the same request ID until a final status is reached.
+If null, means no charge was created, e.g. because the request was rejected.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="1" name="charge-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Unique ID for the charge generated by Boku.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="24" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="timestamp">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Time original charge request was received ("YYYY-MM-DD hh:mm:ss").
+
+All timestamps are in UTC.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:pattern value="^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="merchant-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Boku assigned merchant ID</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="50" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="0" name="merchant-transaction-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Merchant assigned transaction ID</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="128" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="country">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Country code in ISO 3166-1-alpha-2 standard</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:pattern value="^[A-Z]{2}$" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="network-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Issuer's Network ID</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="10" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="currency">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>ISO 4217 3 letter currency code.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:pattern value="^[A-Z]{3}$" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="total-amount">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Total amount charged or attempted to charge, including tax</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:double">
+                <xs:minInclusive value="0.001" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="merchant-item-description">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>A short purchase description that appears on the consumer bill.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="255" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="0" name="reversal" type="schemas:reversal">
+            <xs:annotation>
+              <xs:documentation>Contains information about the reversal status of this transaction.
+If present, charge may be considered reversed. If not present, no reversal request has been received.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="0" name="merchant-data" type="xs:string">
+            <xs:annotation>
+              <xs:documentation>Merchant supplied meta data</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="charge-request">
+        <xs:annotation>
+          <xs:documentation>'charge' Request - General Parameters</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+          <xs:element minOccurs="1" name="merchant-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Boku assigned merchant ID</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="50" />
+                <xs:minLength value="1" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="merchant-request-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Unique merchant assigned request ID
+
+Multiple requests received with the same request ID in this field will be handled idempotently within the idempotency window.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="50" />
+                <xs:minLength value="1" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="0" name="merchant-transaction-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Merchant assigned transaction ID</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="50" />
+                <xs:minLength value="1" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="0" name="merchant-data">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Merchant supplied meta data. This meta data is returned in the 'charge' response and can be available in merchant reports.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="255" />
+                <xs:minLength value="0" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="merchant-item-description">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>A short purchase description that appears on the consumer bill. A string longer than 20 characters will be truncated.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="255" />
+                <xs:minLength value="1" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="optin-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Boku assigned consumer opt-in ID</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="50" />
+                <xs:minLength value="1" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="currency">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>ISO 4217 3 letter currency code.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:pattern value="^[A-Z]{3}$" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="total-amount">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Total amount to charge, including tax</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:double">
+                <xs:minInclusive value="0.001" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="0" name="timeout" type="schemas:timeout">
+            <xs:annotation>
+              <xs:documentation>Specifies how long to block waiting for a response</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="0" name="consumer-ip-address">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>IP address of consumer. Must be IPv4 address.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="20" />
+                <xs:minLength value="1" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="0" name="subscription" type="schemas:subscription" />
+          <xs:element minOccurs="0" name="seller-of-record" type="schemas:seller-of-record">
+            <xs:annotation>
+              <xs:documentation>Optin and Charge Request API can be made for specific Seller of Record previously registered with Boku.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="charge-response">
+        <xs:annotation>
+          <xs:documentation>'charge' Response - General Elements</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+          <xs:element minOccurs="1" name="result" type="schemas:result">
+            <xs:annotation>
+              <xs:documentation>The 'result' element is defined in every response type. It is used to convey the outcome of an API request.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="0" name="timestamp">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Time request was received ("YYYY-MM-DD hh:mm:ss").
+
+All timestamps are in UTC</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:pattern value="^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="merchant-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Boku assigned merchant ID</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="50" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="merchant-request-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Merchant assigned unique request ID</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="50" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="0" name="merchant-transaction-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Merchant assigned transaction ID</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="128" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="0" name="merchant-data" type="xs:string">
+            <xs:annotation>
+              <xs:documentation>Merchant supplied meta data</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="1" name="optin-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Boku assigned consumer opt-in ID</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="24" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="0" name="charge-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Unique ID for each charge generated by Boku.
+If null, means no charge was created, e.g. because the request was rejected.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="24" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="0" name="charge-status" type="schemas:charge-status">
+            <xs:annotation>
+              <xs:documentation>Status of the charge at the time this response was returned.
+
+If 'in-progress' is returned, the charge call should be re-issued with the same request ID until a final status is reached.
+If null, means no charge was created, e.g. because the request was rejected.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="0" name="country">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Country code in ISO 3166-1-alpha-2 standard</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:pattern value="^[A-Z]{2}$" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="0" name="network-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Issuer's Network ID</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="10" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="0" name="seller-of-record" type="schemas:seller-of-record">
+            <xs:annotation>
+              <xs:documentation>Optin and Charge Request API can be made for specific Seller of Record previously registered with Boku.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="0" name="settlement" type="schemas:Settlement" />
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="field">
+        <xs:annotation>
+          <xs:documentation>Provides per-field error information in the case where the submitted request did not satisfy validation constraints.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence />
+        <xs:attribute name="path" type="xs:string">
+          <xs:annotation>
+            <xs:documentation>Property path of the field that was in error. The element or attribute name is given in camel-case, with nested objects delimited by `.` (period)
+
+If there are multiple distinct errors regarding a particular field, it may appear more than once. I.e. `field[path]` is not necessarily unique.</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="reason" type="xs:string">
+          <xs:annotation>
+            <xs:documentation>A descriptive reason why the field was invalid. This message is not localized and so is not appropriate for user messaging.</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+      </xs:complexType>
+      <xs:complexType name="period">
+        <xs:annotation>
+          <xs:documentation>The period of the subscription (at which interval the consumer is being charged)</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+          <xs:element minOccurs="1" name="unit" type="schemas:PeriodUnit">
+            <xs:annotation>
+              <xs:documentation>A period is comprised of a unit of time (day, week, month, year) and a count (how many units per period).
+
+For example, to define a "3 month" period one would set the unit as "month" and the count as "3".</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+        <xs:attribute name="count">
+          <xs:annotation>
+            <xs:documentation>The count of units in the period</xs:documentation>
+          </xs:annotation>
+          <xs:simpleType>
+            <xs:annotation>
+              <xs:documentation>The count of units in the period</xs:documentation>
+            </xs:annotation>
+            <xs:restriction base="xs:integer">
+              <xs:minInclusive value="1" />
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+      </xs:complexType>
+      <xs:complexType name="query-charge-request">
+        <xs:annotation>
+          <xs:documentation>'query-charge' Request</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+          <xs:element minOccurs="1" name="country">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Country code within which to search for charges</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:pattern value="^[A-Z]{2}$" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="merchant-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Boku assigned merchant ID</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="50" />
+                <xs:minLength value="1" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="0" name="charge-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>The charge-id returned from the original charge-response.
+Will match only a single transaction.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="24" />
+                <xs:minLength value="1" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="0" name="merchant-request-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>The merchant-request-id of the original charge-request.
+Will match only a single transaction.
+
+**Note:** merchant-request-id is only valid within 24 hours of the original charge request. After this time, it will return no results.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="50" />
+                <xs:minLength value="1" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="0" name="merchant-transaction-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Merchant assigned transaction ID supplied in the original charge-request.
+May match multiple transactions in the case where the merchant reuses merchant-transaction-ids across different request IDs, as Boku does not enforce uniqueness on this value.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="50" />
+                <xs:minLength value="1" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="query-charge-response">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="result" type="schemas:result">
+            <xs:annotation>
+              <xs:documentation>The 'result' element is defined in every response type. It is used to convey the outcome of an API request.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="charges">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element minOccurs="0" maxOccurs="unbounded" name="charges" type="schemas:charge" />
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="result">
+        <xs:annotation>
+          <xs:documentation>The 'result' element is defined in every response type. It is used to convey the outcome of an API request.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+          <xs:element minOccurs="1" name="status" type="schemas:ResultStatus">
+            <xs:annotation>
+              <xs:documentation>The status of the operation</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="1" name="reason-code" type="xs:integer">
+            <xs:annotation>
+              <xs:documentation>Provides additional information for the status</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="1" name="message" type="xs:string">
+            <xs:annotation>
+              <xs:documentation>Description of the reason code</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="1" name="retriable" type="xs:boolean">
+            <xs:annotation>
+              <xs:documentation>**true** if the request can be retried; **false** otherwise</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="0" name="retry-delay" type="xs:integer">
+            <xs:annotation>
+              <xs:documentation>Minimum milliseconds to delay before re-trying request</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element name="invalid-request-fields">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element minOccurs="0" maxOccurs="unbounded" name="invalidRequestFields" type="schemas:field" />
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="reversal">
+        <xs:annotation>
+          <xs:documentation>Contains information about the reversal status of this transaction.
+If present, charge may be considered reversed. If not present, no reversal request has been received.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+          <xs:element minOccurs="1" name="timestamp">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Time original reverse-charge request was received ("YYYY-MM-DD hh:mm:ss").
+
+All timestamps are in UTC.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:pattern value="^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="reversal-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Boku assigned reversal ID allocated at the time of the original reversal request</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="24" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="reverse-charge-request">
+        <xs:annotation>
+          <xs:documentation>'reverse-charge' Request - General Parameters</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+          <xs:element minOccurs="1" name="merchant-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Boku assigned merchant ID</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="50" />
+                <xs:minLength value="1" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="merchant-request-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Merchant assigned request ID of the original charge-request being reversed</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="50" />
+                <xs:minLength value="1" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="country">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Country code of the original charge to be reversed (same value as the original charge-request)</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:pattern value="^[A-Z]{2}$" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="reverse-charge-response">
+        <xs:annotation>
+          <xs:documentation>'reverse-charge' Response - General Elements</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+          <xs:element minOccurs="1" name="result" type="schemas:result">
+            <xs:annotation>
+              <xs:documentation>The 'result' element is defined in every response type. It is used to convey the outcome of an API request.</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="0" name="timestamp">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Time request was received ("YYYY-MM-DD hh:mm:ss").
+
+All timestamps are in UTC.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:pattern value="^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="merchant-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Boku assigned merchant ID</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="50" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="merchant-request-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Merchant assigned request ID</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="50" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="0" name="reversal-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Boku assigned reversal ID</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="24" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="country">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Country code in ISO 3166-1-alpha-2 standard</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:pattern value="^[A-Z]{2}$" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="0" name="charge-id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>Unique ID for each charge generated by Boku</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="24" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="seller-of-record">
+        <xs:annotation>
+          <xs:documentation>Optin and Charge Request API can be made for specific Seller of Record previously registered with Boku.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+          <xs:element minOccurs="1" name="id">
+            <xs:simpleType>
+              <xs:annotation>
+                <xs:documentation>ID of seller of record previously registered with Boku. Boku generated Seller of Record id will be 24 character alpha-numeric string.</xs:documentation>
+              </xs:annotation>
+              <xs:restriction base="xs:string">
+                <xs:maxLength value="24" />
+                <xs:minLength value="1" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="Settlement">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="currency" type="xs:string" />
+          <xs:element minOccurs="1" name="gross-merchant-amount">
+            <xs:simpleType>
+              <xs:restriction base="xs:double">
+                <xs:minInclusive value="0.001" />
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element minOccurs="1" name="exchange-rate" type="xs:double" />
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="subscription">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="period" type="schemas:period">
+            <xs:annotation>
+              <xs:documentation>The period of the subscription (at which interval the consumer is being charged)</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element minOccurs="0" name="renewal" type="xs:boolean">
+            <xs:annotation>
+              <xs:documentation>False if this is the first charge in a subscription, true if the charge is a renewal (second period onwards)</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+        <xs:attribute name="is-subscription" type="xs:boolean">
+          <xs:annotation>
+            <xs:documentation>True if the charge is for a subscription, false otherwise</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+      </xs:complexType>
+      <xs:complexType name="timeout">
+        <xs:annotation>
+          <xs:documentation>Specifies how long to block waiting for a response</xs:documentation>
+        </xs:annotation>
+        <xs:sequence />
+        <xs:attribute name="after">
+          <xs:annotation>
+            <xs:documentation>Maximum time to block before returning a response, in milliseconds. The value `0` means do not block, and there is no way to specify infinity.</xs:documentation>
+          </xs:annotation>
+          <xs:simpleType>
+            <xs:annotation>
+              <xs:documentation>Maximum time to block before returning a response, in milliseconds. The value `0` means do not block, and there is no way to specify infinity.</xs:documentation>
+            </xs:annotation>
+            <xs:restriction base="xs:long">
+              <xs:maxInclusive value="60000" />
+              <xs:minInclusive value="0" />
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+      </xs:complexType>
+      <xs:simpleType name="PeriodUnit">
+        <xs:annotation>
+          <xs:documentation>A period is comprised of a unit of time (day, week, month, year) and a count (how many units per period).
+
+For example, to define a "3 month" period one would set the unit as "month" and the count as "3".</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="day" />
+          <xs:enumeration value="week" />
+          <xs:enumeration value="month" />
+          <xs:enumeration value="year" />
+        </xs:restriction>
+      </xs:simpleType>
+      <xs:simpleType name="charge-status">
+        <xs:annotation>
+          <xs:documentation>Status of the charge at the time this response was returned.
+
+If 'in-progress' is returned, the charge call should be re-issued with the same request ID until a final status is reached.
+If null, means no charge was created, e.g. because the request was rejected.</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="success" />
+          <xs:enumeration value="failed" />
+          <xs:enumeration value="in-progress" />
+        </xs:restriction>
+      </xs:simpleType>
+      <xs:simpleType name="ResultStatus">
+        <xs:annotation>
+          <xs:documentation>The status of the operation</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="OK" />
+          <xs:enumeration value="ERROR" />
+        </xs:restriction>
+      </xs:simpleType>
+      <xs:simpleType name="Content-Type">
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="application/xml" />
+        </xs:restriction>
+      </xs:simpleType>
+      <xs:complexType name="POST_charge_InputMessage">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="Content-Type" type="schemas:Content-Type" />
+          <xs:element minOccurs="1" name="charge-request" type="schemas:charge-request" />
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="POST_charge_OutputMessage">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="charge-response" type="schemas:charge-response">
+            <xs:annotation>
+              <xs:documentation>'charge' Response - General Elements</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="POST_queryCharge_InputMessage">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="Content-Type" type="schemas:Content-Type" />
+          <xs:element minOccurs="1" name="query-charge-request" type="schemas:query-charge-request" />
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="POST_queryCharge_OutputMessage">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="query-charge-response" type="schemas:query-charge-response" />
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="POST_reverseCharge_InputMessage">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="Content-Type" type="schemas:Content-Type" />
+          <xs:element minOccurs="1" name="reverse-charge-request" type="schemas:reverse-charge-request" />
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="POST_reverseCharge_OutputMessage">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="reverse-charge-response" type="schemas:reverse-charge-response">
+            <xs:annotation>
+              <xs:documentation>'reverse-charge' Response - General Elements</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="POST_beginSingleCharge_InputMessage">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="Content-Type" type="schemas:Content-Type" />
+          <xs:element minOccurs="1" name="begin-single-charge-request" type="schemas:begin-single-charge-request" />
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="POST_beginSingleCharge_OutputMessage">
+        <xs:sequence>
+          <xs:element minOccurs="1" name="begin-single-charge-response" type="schemas:begin-single-charge-response" />
+        </xs:sequence>
+      </xs:complexType>
+    </xs:schema>
+  </types>
+  <message name="POST_charge_InputMessage">
+    <part name="POST_charge_InputMessage" element="schemas:POST_charge_InputMessage" />
+  </message>
+  <message name="POST_charge_OutputMessage">
+    <part name="POST_charge_OutputMessage" element="schemas:POST_charge_OutputMessage" />
+  </message>
+  <message name="POST_queryCharge_InputMessage">
+    <part name="POST_queryCharge_InputMessage" element="schemas:POST_queryCharge_InputMessage" />
+  </message>
+  <message name="POST_queryCharge_OutputMessage">
+    <part name="POST_queryCharge_OutputMessage" element="schemas:POST_queryCharge_OutputMessage" />
+  </message>
+  <message name="POST_reverseCharge_InputMessage">
+    <part name="POST_reverseCharge_InputMessage" element="schemas:POST_reverseCharge_InputMessage" />
+  </message>
+  <message name="POST_reverseCharge_OutputMessage">
+    <part name="POST_reverseCharge_OutputMessage" element="schemas:POST_reverseCharge_OutputMessage" />
+  </message>
+  <message name="POST_beginSingleCharge_InputMessage">
+    <part name="POST_beginSingleCharge_InputMessage" element="schemas:POST_beginSingleCharge_InputMessage" />
+  </message>
+  <message name="POST_beginSingleCharge_OutputMessage">
+    <part name="POST_beginSingleCharge_OutputMessage" element="schemas:POST_beginSingleCharge_OutputMessage" />
+  </message>
+  <portType name="Boku_x0020_Direct_x0020_Payments_x0020_API_PortType">
+    <operation name="POST_charge">
+      <documentation>The 'charge' request processes a payment against a previously authorized opt-in. The 'optin-id' received in the 'optin'/'confirm-optin' response must be supplied in order to validate the consumer payment method.
+
+If the 'optin-id' and the other parameters of the request are valid, the charge is submitted to the issuer for processing. A 'charge-id' is returned in the API response.
+
+'Charge' may operate as a synchronous request, fully asynchronous, or synchronous with fallback to asynchronous after a timeout. The timeout is supplied with the request, or can default to a value configurable for the merchant. The 'charge' method returns a unique 'charge-id' in all cases where the request has been accepted for processing, including success, failure, and pending cases.
+
+The 'charge' method is idempotent. If the same request is sent again (with the same 'merchant-request-id'), Boku will return the current status of the transaction. For example:
+
+* If the transaction has completed successfully, a response code of "0" will be returned.
+* If the transaction has completed with a billing error, a response code of "107" will be   returned</documentation>
+      <input message="wsdl:POST_charge_InputMessage" />
+      <output message="wsdl:POST_charge_OutputMessage">
+        <documentation />
+      </output>
+    </operation>
+    <operation name="POST_queryCharge">
+      <documentation>Retrieves the status and all details of prior charges matching the given request criteria.
+
+Each returned charge element is similar to a charge-response: although some elements are missing, all present elements have the same names, format and meaning as those in the original charge-response.
+
+The query-charge API call is guaranteed to return transactions up to 1 year old. If the transaction was created before that period, this API may return no results.
+
+Criteria are evaluated in an AND fashion, i.e. if more than one field is supplied then all will be used to filter the returned charge elements. In normal usage this is not relevant, since you would only supply one of the three fields by itself.</documentation>
+      <input message="wsdl:POST_queryCharge_InputMessage" />
+      <output message="wsdl:POST_queryCharge_OutputMessage">
+        <documentation />
+      </output>
+    </operation>
+    <operation name="POST_reverseCharge">
+      <documentation>Reverses a charge request. This method is typically used when the result of a prior charge request is unknown. This can occur for a number of reasons, including:
+
+* Network issue
+* Request timed out by merchant
+* Response received but could not be recorded
+
+* A reversal will be accepted and a status of "OK" returned in almost all cases, regardless   of whether Boku actually received the original charge.
+
+Aside from general request validation errors, a reversal will only be rejected if the original charge request was issued over 1 hour previously. After the 1 hour time period has expired, reversals are no longer allowed - please refund the transaction if required.</documentation>
+      <input message="wsdl:POST_reverseCharge_InputMessage" />
+      <output message="wsdl:POST_reverseCharge_OutputMessage">
+        <documentation />
+      </output>
+    </operation>
+    <operation name="POST_beginSingleCharge">
+      <documentation>The purpose of the 'begin-single-charge' API call is to initiate a one time charge. The 'begin-single-charge' call initiates a process in which a consumer is required to authenticate themselves each time a purchase is requested. This API provides a payment option for consumers who choose not to save a payment method with the merchant.
+
+The Merchant can obtain information on the status of the charge made through the 'begin-single-charge' API in the following ways
+
+* 'query-charge' API
+* notification to a Merchant's notification URL specified in the 'begin-single-charge' request</documentation>
+      <input message="wsdl:POST_beginSingleCharge_InputMessage" />
+      <output message="wsdl:POST_beginSingleCharge_OutputMessage">
+        <documentation />
+      </output>
+    </operation>
+  </portType>
+  <binding name="Boku_x0020_Direct_x0020_Payments_x0020_API_Binding" type="wsdl:Boku_x0020_Direct_x0020_Payments_x0020_API_PortType">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" />
+    <operation name="POST_charge">
+      <soap:operation soapAction="POST_charge" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" />
+      <input>
+        <soap:body use="literal" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" />
+      </input>
+      <output>
+        <soap:body use="literal" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" />
+      </output>
+    </operation>
+    <operation name="POST_queryCharge">
+      <soap:operation soapAction="POST_queryCharge" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" />
+      <input>
+        <soap:body use="literal" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" />
+      </input>
+      <output>
+        <soap:body use="literal" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" />
+      </output>
+    </operation>
+    <operation name="POST_reverseCharge">
+      <soap:operation soapAction="POST_reverseCharge" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" />
+      <input>
+        <soap:body use="literal" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" />
+      </input>
+      <output>
+        <soap:body use="literal" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" />
+      </output>
+    </operation>
+    <operation name="POST_beginSingleCharge">
+      <soap:operation soapAction="POST_beginSingleCharge" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" />
+      <input>
+        <soap:body use="literal" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" />
+      </input>
+      <output>
+        <soap:body use="literal" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" />
+      </output>
+    </operation>
+  </binding>
+  <service name="Boku_x0020_Direct_x0020_Payments_x0020_API">
+    <documentation>## API Security
+
+Security is a significant consideration for payment platforms. As part of the registration process for each registered merchant account, merchants receive a security key used to authenticate communications in either direction.
+
+Developers should consult the [Boku API Signature Authentication Guide](page:guides/api-signature-authentication-guide) for additional details with respect to implementing security on the Boku APIs.
+
+## API Usage
+
+When a consumer chooses to use a local payment-method (wallet), the consumer must go through an 'optin' flow to authenticate. This is accomplished using a redirect to the issuer's app or website where the consumer authenticates and completes the opt-in process.
+
+After the consumer adds their local payment-method (wallet), as their registered payment method, the 'charge' method is used to charge the consumer's local payment-method.
+
+If a customer decides to refund a transaction, the 'refund-charge' method can be used to refund the transaction.
+
+## API Versioning
+
+The Boku Payment Gateway API is versioned to provide support for changes to functionality without affecting existing integrations.  Each API URL includes version information that enables distinct functionality across different versions.
+
+There are several types of changes that could result in a new API version:
+
+1. New API functionality – new APIs, new parameters, additional information in responses, improved error reporting.
+2. Deprecated API functionality – deprecated APIs, deprecated parameters, deprecated error messages.
+3. Changes in functionality – existing functional behavior changes such as the returned result of a call. A warning is changed to an error.  Validation becomes stricter or more lenient.
+
+In these cases, Boku will release a new API version through a new endpoint(s). When new versions of existing APIs are added, support for existing versions is maintained.  Unless otherwise stated, as a rule, compatibility is maintained across versions.  Prior supported endpoints should have unchanged behavior. If an API is deprecated and scheduled to be removed, a notice of not less than 6 months will be given.  Requests for extensions to this period can be considered.
+
+Boku may make changes to the API within an existing version without changing the version number. An example of a non-versioning change would be the addition of an optional field to a request or to a response.
+
+## API Calls
+
+### URL Scheme
+
+All the below API calls are against URLs that follow the pattern,
+
+``
+https://${api-node}.boku.com/${api-family}/${api-version}/${api-call}
+``
+
+Definitions for the above placeholders:
+
+* **api-node**: This follows the pattern '${country}-api4' (e.g. 'us-api4').
+    * 'country' is the two letter country code of the end-user's payment-method against which the call is made.
+    * The country code is required and is used for more efficient routing of the request.
+    * The country code in the url must match the country code supplied in the `optin-request`.`country` element.
+* **api-family**: Groups a family of related API methods.
+    * In this API, family is either one of:
+        * 'optin' - For interacting with the user or handset to obtain billing approval.
+        * 'billing' - For actually performing billing operations against the user.
+* **api-version**: In this version of the API, this value is always the string '3.0'.
+    * Calls under different version numbers may be used in the future to introduce non-compatible API changes.
+* **api-call**: The name particular API call or method to invoke, for example 'charge' or 'refund-charge'.
+    * This usually matches the XML root element name, sans the '-request' suffix.
+
+Fully qualified API call URLs are documented with each of the example calls detailed below.
+</documentation>
+    <port name="default_Port" binding="wsdl:Boku_x0020_Direct_x0020_Payments_x0020_API_Binding">
+      <soap:address location="https://jp-api4-stage.boku.com" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" />
+    </port>
+  </service>
+</definitions>

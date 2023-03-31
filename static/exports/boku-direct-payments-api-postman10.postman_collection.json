@@ -1,0 +1,239 @@
+{
+  "id": "fe780f19-9597-4339-8940-70855bf99e1f",
+  "name": "Boku Direct Payments API",
+  "description": "## API Security\n\nSecurity is a significant consideration for payment platforms. As part of the registration process for each registered merchant account, merchants receive a security key used to authenticate communications in either direction.\n\nDevelopers should consult the [Boku API Signature Authentication Guide](page:guides/api-signature-authentication-guide) for additional details with respect to implementing security on the Boku APIs.\n\n## API Usage\n\nWhen a consumer chooses to use a local payment-method (wallet), the consumer must go through an 'optin' flow to authenticate. This is accomplished using a redirect to the issuer's app or website where the consumer authenticates and completes the opt-in process.\n\nAfter the consumer adds their local payment-method (wallet), as their registered payment method, the 'charge' method is used to charge the consumer's local payment-method.\n\nIf a customer decides to refund a transaction, the 'refund-charge' method can be used to refund the transaction.\n\n## API Versioning\n\nThe Boku Payment Gateway API is versioned to provide support for changes to functionality without affecting existing integrations.  Each API URL includes version information that enables distinct functionality across different versions.\n\nThere are several types of changes that could result in a new API version:\n\n1. New API functionality – new APIs, new parameters, additional information in responses, improved error reporting.\n2. Deprecated API functionality – deprecated APIs, deprecated parameters, deprecated error messages.\n3. Changes in functionality – existing functional behavior changes such as the returned result of a call. A warning is changed to an error.  Validation becomes stricter or more lenient.\n\nIn these cases, Boku will release a new API version through a new endpoint(s). When new versions of existing APIs are added, support for existing versions is maintained.  Unless otherwise stated, as a rule, compatibility is maintained across versions.  Prior supported endpoints should have unchanged behavior. If an API is deprecated and scheduled to be removed, a notice of not less than 6 months will be given.  Requests for extensions to this period can be considered.\n\nBoku may make changes to the API within an existing version without changing the version number. An example of a non-versioning change would be the addition of an optional field to a request or to a response.\n\n## API Calls\n\n### URL Scheme\n\nAll the below API calls are against URLs that follow the pattern,\n\n``\nhttps://${api-node}.boku.com/${api-family}/${api-version}/${api-call}\n``\n\nDefinitions for the above placeholders:\n\n* **api-node**: This follows the pattern '${country}-api4' (e.g. 'us-api4').\n    * 'country' is the two letter country code of the end-user's payment-method against which the call is made.\n    * The country code is required and is used for more efficient routing of the request.\n    * The country code in the url must match the country code supplied in the `optin-request`.`country` element.\n* **api-family**: Groups a family of related API methods.\n    * In this API, family is either one of:\n        * 'optin' - For interacting with the user or handset to obtain billing approval.\n        * 'billing' - For actually performing billing operations against the user.\n* **api-version**: In this version of the API, this value is always the string '3.0'.\n    * Calls under different version numbers may be used in the future to introduce non-compatible API changes.\n* **api-call**: The name particular API call or method to invoke, for example 'charge' or 'refund-charge'.\n    * This usually matches the XML root element name, sans the '-request' suffix.\n\nFully qualified API call URLs are documented with each of the example calls detailed below.\n",
+  "order": [],
+  "folders": [
+    {
+      "id": "d5f9e833-41af-4aff-a764-9f6e964584c0",
+      "name": "Charge",
+      "description": "The 'charge' method submit charges to the associated consumer account that is registered with the merchant. The 'query-charge' method can be used in cases when the result of a prior charge is unknown. The 'reverse-charge' method can be used in cases when the result of a prior charge is unknown.\n\n#### Charge (synchronous)\n\n| Step | Description | API |\n|------|-------------|-----|\n| 1 | Merchant sends request to Boku to charge the consumer for a purchase using their registered payment method | 'charge' API method |\n| 2 | Boku responds with success or failure | |\n\n#### Charge (asynchronous)\n\n| Step | Description | API |\n|------|-------------|-----|\n| 1 | Merchant sends the request to Boku to cancel a previously collected opt-in. Remove a payment method. | 'charge' API method |\n| 2 | Boku responds with pending transaction status | |\n| 3 | Merchant repeatedly polls until the purchase completes | |\n| 4| Boku responds with success or failure | |\n\n#### Reverse Charge\n\n| Step | Description | API |\n|------|-------------|-----|\n| 1 | Merchant sends request to Boku to reverse a charge. Typically used when a merchant does not receive a response for a charge request | 'reverse-charge' API method |\n| 2 | Boku responds with success or failure | |\n\n#### Handling charge timeouts and network errors\n\nIn situations where the outcome of a `charge` call is uncertain to the merchant, the merchant must take action to resolve the final state of the charge.\n\nThese situations include timeouts where a well-formed in-progress response was sent to the merchant (reason code 23), a well-formed internal error response (reason code 35), a malformed response or unexpected HTTP error, as well as network errors such as connection-reset or socket-timeout where Boku may not have even received the original request at all.\n\nThe API provides several different ways to do this depending on how the merchant wishes to proceed with the charge:\n\n  1. Give up and reverse the charge, regardless of whether it succeeded, failed, or is still in progress.\n      * Issue a reverse-charge-request with the same merchant-request-id as was used for the charge-request.\n  2. Continue to try and proceed with the charge, even if Boku never received the original request.\n      * Send another charge-request identical to the first charge request. (Charge API is idempotent.)\n  3. Check on the status of the charge, but do not start a new one if it is not processing already.\n      * Poll the current status of the charge by sending a query-charge-request with the merchant-request-id used in the original charge-request.\n\n### API idempotency and duplicate or retried requests\n\nAll API calls that can modify state or have side-effects are idempotent based on the `merchant-request-id` field during the idempotency window, which is 24 hours.\n\nThis means that any request received by Boku that has the same `merchant-request-id` to a prior request and has the same field values as that prior request, will either return a logically equivalent response to the previous response or in cases where the previous response was incomplete or indeterminate may return the current known state of the requested operation.\n\nThis feature exists to ensure accidental duplicate actions are not executed and to provide a general solution for retries in case of indeterminate outcomes.\n\nIt does ultimately rely on an appropriate merchant-request-id generation strategy to be useful, though, so merchants need to take great care in how they generate and supply those IDs.\n\n#### Idempotency examples\n\nHere are some examples using charge calls to illustrate this behavior:\n\n* A charge request results in success, and then a duplicate charge request is received:\n    * The second request receives the same success response as the first, and no new transaction is created.\n* A charge request results in a billing error, such as insufficient funds, and then a duplicate charge request is received:\n    * The second request receives the same error response as the first, and no new transaction is created.\n* A charge request takes longer than the given `timeout` parameter and returns in-progress status (23), and then a duplicate charge request is received:\n    * If the charge is still incomplete, will return the same in-progress status as last time.\n    * If the charge has completed since the first response was returned, will return the final status of the charge (success or fail). This final status response will be identical to if the charge had completed within the timeout in the first place.\n* A charge request resulted in an internal error and the processing state was indeterminate, so internal-error status (35) was returned, and then a duplicate charge request is received:\n    * If the internal error occurred before the charge was recorded, no processing has occurred and so a new charge will be initiated by the second request.\n    * If the internal error occurred after the charge was recorded, then the current status of the charge initiated in the first request will be returned.\n    * If an internal error is experienced again, internal-error (35) will be returned.\n\n#### On the idempotency window\n\nThe idempotency window is 24 hours, which means idempotency only applies for 24 hours after the last request was received with a given `merchant-request-id`.\n\nIf a request is re-issued for the first time over 24 hours after the original request was received it will be treated as a brand new request, and be entirely independent of the first request.\n\nThe 24-hour window is a sliding window based on the last usage of a particular `merchant-request-id`. Thus, for potentially long-running operations, requests may be repeatedly reissued for as long as necessary, as long as the gap between two requests never exceeds 24 hours.\n\n#### On request conflicts\n\nIdempotency applies only for duplicate requests on the basis of `merchant-request-id` that are logically equivalent. If a request is received with the same `merchant-request-id` and is not equivalent to the previous request then it will be rejected with error 124 \"Idempotent request ID conflict\".\n\nExamples of conflicting are things such as using the same request ID for a request of a different type or issuing a duplicate charge request with a differing amount or user account.\n",
+      "order": [
+        "55c0c1fc-21e7-4273-9b25-7db03999f7a2",
+        "0ca8d068-cc68-47d7-9c38-d40d8e3667f3",
+        "3ac3e243-9320-42e8-a952-b7b378253e09",
+        "44b2bef1-9915-49f8-a672-15beb6b7250f"
+      ],
+      "collection_id": "fe780f19-9597-4339-8940-70855bf99e1f"
+    }
+  ],
+  "requests": [
+    {
+      "folder": "d5f9e833-41af-4aff-a764-9f6e964584c0",
+      "id": "55c0c1fc-21e7-4273-9b25-7db03999f7a2",
+      "name": "charge",
+      "dataMode": "raw",
+      "dataDisabled": false,
+      "descriptionFormat": "markdown",
+      "description": "The 'charge' request processes a payment against a previously authorized opt-in. The 'optin-id' received in the 'optin'/'confirm-optin' response must be supplied in order to validate the consumer payment method.\n\nIf the 'optin-id' and the other parameters of the request are valid, the charge is submitted to the issuer for processing. A 'charge-id' is returned in the API response.\n\n'Charge' may operate as a synchronous request, fully asynchronous, or synchronous with fallback to asynchronous after a timeout. The timeout is supplied with the request, or can default to a value configurable for the merchant. The 'charge' method returns a unique 'charge-id' in all cases where the request has been accepted for processing, including success, failure, and pending cases.\n\nThe 'charge' method is idempotent. If the same request is sent again (with the same 'merchant-request-id'), Boku will return the current status of the transaction. For example:\n\n* If the transaction has completed successfully, a response code of \"0\" will be returned.\n* If the transaction has completed with a billing error, a response code of \"107\" will be   returned",
+      "headers": "Content-Type:application/xml\r\nAccept:application/xml\r\n",
+      "method": "POST",
+      "currentHelper": "",
+      "pathVariables": {},
+      "url": "{{default}}/billing/3.0/charge",
+      "responses": [
+        {
+          "request": "55c0c1fc-21e7-4273-9b25-7db03999f7a2",
+          "id": "3660a99a-56a6-45e1-a136-22318c923af1",
+          "name": "Response_200",
+          "status": "",
+          "responseCode": {
+            "code": 200,
+            "name": "200"
+          },
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/xml"
+            }
+          ],
+          "mime": "application/xml",
+          "text": "<charge-response>\r\n  <result>\r\n    <reason-code>0</reason-code>\r\n    <message>Operation Successful</message>\r\n    <retriable>false</retriable>\r\n    <status>OK</status>\r\n  </result>\r\n  <timestamp>2015-02-40 04:44:16</timestamp>\r\n  <charge-id>b368363a00bbddbf794eba33</charge-id>\r\n  <charge-status>success</charge-status>\r\n  <merchant-data>TY235g897qWs</merchant-data>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-request-id>1002008</merchant-request-id>\r\n  <merchant-transaction-id>9002005</merchant-transaction-id>\r\n  <optin-id>IVXecDoa2f6Y3oOqp1f7</optin-id>\r\n  <country>DE</country>\r\n  <network-id>de-super</network-id>\r\n</charge-response>",
+          "language": "Text",
+          "rawDataType": "text"
+        }
+      ],
+      "rawModeData": "<charge-request>\r\n  <currency>USD</currency>\r\n  <merchant-data>TY235g897qWs</merchant-data>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-item-description>Puzzle game</merchant-item-description>\r\n  <merchant-request-id>1002008</merchant-request-id>\r\n  <merchant-transaction-id>9002005</merchant-transaction-id>\r\n  <optin-id>IVXecDoa2f6Y3oOqp1f7</optin-id>\r\n  <total-amount>5</total-amount>\r\n  <timeout after=\"10000\" />\r\n  <consumer-ip-address>24.196.237.108</consumer-ip-address>\r\n</charge-request>",
+      "collectionId": "fe780f19-9597-4339-8940-70855bf99e1f",
+      "queryParams": [],
+      "headerData": [
+        {
+          "key": "Content-Type",
+          "value": "application/xml",
+          "description": ""
+        },
+        {
+          "key": "Accept",
+          "value": "application/xml"
+        }
+      ],
+      "pathVariableData": []
+    },
+    {
+      "folder": "d5f9e833-41af-4aff-a764-9f6e964584c0",
+      "id": "0ca8d068-cc68-47d7-9c38-d40d8e3667f3",
+      "name": "queryCharge",
+      "dataMode": "raw",
+      "dataDisabled": false,
+      "descriptionFormat": "markdown",
+      "description": "Retrieves the status and all details of prior charges matching the given request criteria.\n\nEach returned charge element is similar to a charge-response: although some elements are missing, all present elements have the same names, format and meaning as those in the original charge-response.\n\nThe query-charge API call is guaranteed to return transactions up to 1 year old. If the transaction was created before that period, this API may return no results.\n\nCriteria are evaluated in an AND fashion, i.e. if more than one field is supplied then all will be used to filter the returned charge elements. In normal usage this is not relevant, since you would only supply one of the three fields by itself.",
+      "headers": "Content-Type:application/xml\r\nAccept:application/xml\r\n",
+      "method": "POST",
+      "currentHelper": "",
+      "pathVariables": {},
+      "url": "{{default}}/billing/3.0/query-charge",
+      "responses": [
+        {
+          "request": "0ca8d068-cc68-47d7-9c38-d40d8e3667f3",
+          "id": "f9f51cb3-5c64-4219-89c9-2b4b250cd3e4",
+          "name": "Response_200",
+          "status": "",
+          "responseCode": {
+            "code": 200,
+            "name": "200"
+          },
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/xml"
+            }
+          ],
+          "mime": "application/xml",
+          "text": "<query-charge-response>\r\n  <result>\r\n    <reason-code>0</reason-code>\r\n    <message>Found 1 result(s)</message>\r\n    <retriable>false</retriable>\r\n    <status>OK</status>\r\n  </result>\r\n  <charges>\r\n    <charges>\r\n      <result>\r\n        <reason-code>0</reason-code>\r\n        <message>Operation successful</message>\r\n        <retriable>false</retriable>\r\n        <status>OK</status>\r\n      </result>\r\n      <charge-status>success</charge-status>\r\n      <charge-id>b368363a00bbddbf794eba33</charge-id>\r\n      <timestamp>2015-02-40 04:44:16</timestamp>\r\n      <merchant-id>gatewaymerchant</merchant-id>\r\n      <merchant-transaction-id>9002005</merchant-transaction-id>\r\n      <country>DE</country>\r\n      <network-id>de-super</network-id>\r\n      <currency>USD</currency>\r\n      <total-amount>5</total-amount>\r\n      <merchant-item-description>Puzzle game</merchant-item-description>\r\n    </charges>\r\n  </charges>\r\n</query-charge-response>",
+          "language": "Text",
+          "rawDataType": "text"
+        }
+      ],
+      "rawModeData": "<query-charge-request>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <country>US</country>\r\n  <merchant-transaction-id>9002005</merchant-transaction-id>\r\n</query-charge-request>",
+      "collectionId": "fe780f19-9597-4339-8940-70855bf99e1f",
+      "queryParams": [],
+      "headerData": [
+        {
+          "key": "Content-Type",
+          "value": "application/xml",
+          "description": ""
+        },
+        {
+          "key": "Accept",
+          "value": "application/xml"
+        }
+      ],
+      "pathVariableData": []
+    },
+    {
+      "folder": "d5f9e833-41af-4aff-a764-9f6e964584c0",
+      "id": "3ac3e243-9320-42e8-a952-b7b378253e09",
+      "name": "reverseCharge",
+      "dataMode": "raw",
+      "dataDisabled": false,
+      "descriptionFormat": "markdown",
+      "description": "Reverses a charge request. This method is typically used when the result of a prior charge request is unknown. This can occur for a number of reasons, including:\n\n* Network issue\n* Request timed out by merchant\n* Response received but could not be recorded\n\n* A reversal will be accepted and a status of \"OK\" returned in almost all cases, regardless   of whether Boku actually received the original charge.\n\nAside from general request validation errors, a reversal will only be rejected if the original charge request was issued over 1 hour previously. After the 1 hour time period has expired, reversals are no longer allowed - please refund the transaction if required.",
+      "headers": "Content-Type:application/xml\r\nAccept:application/xml\r\n",
+      "method": "POST",
+      "currentHelper": "",
+      "pathVariables": {},
+      "url": "{{default}}/billing/3.0/reverse-charge",
+      "responses": [
+        {
+          "request": "3ac3e243-9320-42e8-a952-b7b378253e09",
+          "id": "79a0d02a-e37f-4868-b37d-5da4b9349d1a",
+          "name": "Response_200",
+          "status": "",
+          "responseCode": {
+            "code": 200,
+            "name": "200"
+          },
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/xml"
+            }
+          ],
+          "mime": "application/xml",
+          "text": "<reverse-charge-response>\r\n  <result>\r\n    <reason-code>0</reason-code>\r\n    <message>Operation Successful</message>\r\n    <retriable>false</retriable>\r\n    <status>OK</status>\r\n  </result>\r\n  <timestamp>2015-02-40 04:44:16</timestamp>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-request-id>1002008</merchant-request-id>\r\n  <reversal-id>tRtbIVXyXVIbtRtytRt</reversal-id>\r\n  <country>DE</country>\r\n</reverse-charge-response>",
+          "language": "Text",
+          "rawDataType": "text"
+        }
+      ],
+      "rawModeData": "<reverse-charge-request>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-request-id>1002008</merchant-request-id>\r\n  <country>US</country>\r\n</reverse-charge-request>",
+      "collectionId": "fe780f19-9597-4339-8940-70855bf99e1f",
+      "queryParams": [],
+      "headerData": [
+        {
+          "key": "Content-Type",
+          "value": "application/xml",
+          "description": ""
+        },
+        {
+          "key": "Accept",
+          "value": "application/xml"
+        }
+      ],
+      "pathVariableData": []
+    },
+    {
+      "folder": "d5f9e833-41af-4aff-a764-9f6e964584c0",
+      "id": "44b2bef1-9915-49f8-a672-15beb6b7250f",
+      "name": "beginSingleCharge",
+      "dataMode": "raw",
+      "dataDisabled": false,
+      "descriptionFormat": "markdown",
+      "description": "The purpose of the 'begin-single-charge' API call is to initiate a one time charge. The 'begin-single-charge' call initiates a process in which a consumer is required to authenticate themselves each time a purchase is requested. This API provides a payment option for consumers who choose not to save a payment method with the merchant.\n\nThe Merchant can obtain information on the status of the charge made through the 'begin-single-charge' API in the following ways\n\n* 'query-charge' API\n* notification to a Merchant's notification URL specified in the 'begin-single-charge' request",
+      "headers": "Content-Type:application/xml\r\nAccept:application/xml\r\n",
+      "method": "POST",
+      "currentHelper": "",
+      "pathVariables": {},
+      "url": "{{default}}/billing/3.0/begin-single-charge",
+      "responses": [
+        {
+          "request": "44b2bef1-9915-49f8-a672-15beb6b7250f",
+          "id": "597f0f04-766d-471c-9692-71fbd50e6154",
+          "name": "Response_200",
+          "status": "",
+          "responseCode": {
+            "code": 200,
+            "name": "200"
+          },
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/xml"
+            }
+          ],
+          "mime": "application/xml",
+          "text": "<begin-single-charge-response>\r\n  <result>\r\n    <reason-code>0</reason-code>\r\n    <message>Operation Successful</message>\r\n    <retriable>false</retriable>\r\n    <status>OK</status>\r\n  </result>\r\n  <timestamp>2020-10-06 21:22:01</timestamp>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-request-id>1602044513536</merchant-request-id>\r\n  <merchant-transaction-id>1602044514238</merchant-transaction-id>\r\n  <charge-id>6n2nmozqd4s0y485gh711o2z</charge-id>\r\n  <charge-status>in-progress</charge-status>\r\n  <country>US</country>\r\n  <payment-method>superwallet</payment-method>\r\n  <hosted>\r\n    <redirect-url>https://www.superwallet.com/authorize</redirect-url>\r\n  </hosted>\r\n</begin-single-charge-response>",
+          "language": "Text",
+          "rawDataType": "text"
+        }
+      ],
+      "rawModeData": "<begin-single-charge-request>\r\n  <country>US</country>\r\n  <merchant-id>gatewaymerchant</merchant-id>\r\n  <merchant-request-id>1602044513536</merchant-request-id>\r\n  <merchant-transaction-id>1602044514238</merchant-transaction-id>\r\n  <merchant-item-description>Fun Item</merchant-item-description>\r\n  <currency>USD</currency>\r\n  <total-amount>20</total-amount>\r\n  <timeout after=\"10000\" />\r\n  <payment-method>superwallet</payment-method>\r\n  <charge-type>hosted</charge-type>\r\n  <notification-url>https://www.boku.com/notify</notification-url>\r\n  <hosted>\r\n    <forward-url>https://www.boku.com/forward</forward-url>\r\n  </hosted>\r\n</begin-single-charge-request>",
+      "collectionId": "fe780f19-9597-4339-8940-70855bf99e1f",
+      "queryParams": [],
+      "headerData": [
+        {
+          "key": "Content-Type",
+          "value": "application/xml",
+          "description": ""
+        },
+        {
+          "key": "Accept",
+          "value": "application/xml"
+        }
+      ],
+      "pathVariableData": []
+    }
+  ],
+  "variables": [
+    {
+      "key": "default",
+      "value": "https://jp-api4-stage.boku.com"
+    },
+    {
+      "key": "default1",
+      "value": "https://jp-api4.boku.com"
+    }
+  ],
+  "auth": {
+    "type": "noauth"
+  }
+}
